@@ -1,0 +1,342 @@
+Starting client 
+
+> frontend@0.0.0 dev
+> vite
+
+[2m12:11:59 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+Port 5173 is in use, trying another one...
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m1098[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m12:38:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m12:38:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/App.tsx[22m
+[2m12:38:56 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+[2m12:38:56 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+[2m12:39:07 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m12:39:15 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m12:39:56 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Signup.tsx[22m
+[2m12:39:56 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+[2m12:39:56 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m12:39:56 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m12:41:32 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Signup.tsx[22m
+[2m12:41:32 AM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+[2m12:41:32 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m12:41:32 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m1:02:47 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m1:02:47 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m1:02:47 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m1:02:51 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m1:03:00 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "@radix-ui/react-select" from "src/components/ui/select.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/components/ui/select.tsx[39m:4:33
+[33m  2  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  3  |  import * as React from "react";
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+     |                                    ^
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";[39m
+      at TransformPluginContext._formatLog (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28999:43)
+      at TransformPluginContext.error (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28996:14)
+      at normalizeUrl (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27119:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27177:32
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:27145:4)
+      at async EnvironmentPluginContainer.transform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:28797:14)
+      at async loadAndTransform (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///d:/SJCET/proj/civicease/client/node_modules/vite/dist/node/chunks/config.js:24542:20)
+[2m1:04:46 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:04:46 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Signup.tsx[22m
+[2m1:37:23 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:37:46 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:37:46 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Dashboard.tsx[22m
+[2m1:37:47 AM[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\SJCET\proj\civicease\client\src\pages\Dashboard.tsx: Identifier 'useEffect' has already been declared. (13:9)
+
+[0m [90m 11 |[31m }[33m;[31m
+ [90m 12 |[31m
+[31m[1m>[22m[31m[90m 13 |[31m [36mimport[31m { useEffect[33m,[31m useState } [36mfrom[31m [32m"react"[31m[33m;[31m
+ [90m    |[31m          [31m[1m^[22m[31m
+ [90m 14 |[31m [36mimport[31m { [33mCard[31m[33m,[31m [33mCardContent[31m[33m,[31m [33mCardHeader[31m[33m,[31m [33mCardTitle[31m } [36mfrom[31m [32m"@/components/ui/card"[31m[33m;[31m
+ [90m 15 |[31m [36mimport[31m { [33mUsers[31m[33m,[31m [33mFileText[31m[33m,[31m [33mHome[31m[33m,[31m [33mRefreshCw[31m } [36mfrom[31m [32m"lucide-react"[31m[33m;[31m
+ [90m 16 |[31m [36mimport[31m axios [36mfrom[31m [32m"axios"[31m[33m;[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/SJCET/proj/civicease/client/src/pages/Dashboard.tsx[39m:13:9
+[33m  11 |  };
+  12 |  
+  13 |  import { useEffect, useState } from "react";
+     |                       ^
+  14 |  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  15 |  import { Users, FileText, Home, RefreshCw } from "lucide-react";[39m
+      at constructor (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:367:19)
+      at TypeScriptParserMixin.raise (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:6624:19)
+      at TypeScriptScopeHandler.declareName (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:4895:21)
+      at TypeScriptParserMixin.declareNameFromIdentifier (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:7594:16)
+      at TypeScriptParserMixin.checkIdentifier (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:7590:12)
+      at TypeScriptParserMixin.checkLVal (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:7527:12)
+      at TypeScriptParserMixin.finishImportSpecifier (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14342:10)
+      at TypeScriptParserMixin.parseImportSpecifier (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14499:17)
+      at TypeScriptParserMixin.parseImportSpecifier (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:10205:18)
+      at TypeScriptParserMixin.parseNamedImportSpecifiers (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14478:36)
+      at TypeScriptParserMixin.parseImportSpecifiersAndAfter (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14318:37)
+      at TypeScriptParserMixin.parseImport (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14311:17)
+      at TypeScriptParserMixin.parseImport (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:9412:26)
+      at TypeScriptParserMixin.parseStatementContent (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:12952:27)
+      at TypeScriptParserMixin.parseStatementContent (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:9569:18)
+      at TypeScriptParserMixin.parseStatementLike (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:12843:17)
+      at TypeScriptParserMixin.parseModuleItem (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:12820:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:13392:36)
+      at TypeScriptParserMixin.parseBlockBody (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:13385:10)
+      at TypeScriptParserMixin.parseProgram (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:12698:10)
+      at TypeScriptParserMixin.parseTopLevel (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:12688:25)
+      at TypeScriptParserMixin.parse (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14568:25)
+      at TypeScriptParserMixin.parse (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:10183:18)
+      at parse (d:\SJCET\proj\civicease\client\node_modules\@babel\parser\lib\index.js:14602:38)
+      at parser (d:\SJCET\proj\civicease\client\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (d:\SJCET\proj\civicease\client\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (d:\SJCET\proj\civicease\client\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (d:\SJCET\proj\civicease\client\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:261:32)
+      at d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:223:11)
+      at d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:189:28
+      at d:\SJCET\proj\civicease\client\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:113:33
+      at step (d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:287:14)
+      at d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (d:\SJCET\proj\civicease\client\node_modules\gensync\index.js:223:11)
+[2m1:38:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:38:17 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Dashboard.tsx[22m
+[2m1:38:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:38:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Login.tsx[22m
+[2m1:38:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:38:34 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/pages/Login.tsx[22m
+[2m1:44:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/pages/Families.tsx[22m
+[2m1:44:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/index.css[22m
+[2m1:44:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/@fs/D:/SJCET/proj/civicease/client/src/App.tsx[22m
