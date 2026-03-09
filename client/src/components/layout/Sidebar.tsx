@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Home, FileText, Users, UserPlus, Building2 } from 'lucide-react'
+import { Home, FileText, Users, UserPlus, Building2, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useContext } from 'react'
 import { AuthContext } from '@/context/AuthContext'
@@ -32,28 +32,40 @@ export function Sidebar() {
     };
 
     return (
-        <div className="hidden border-r bg-muted/40 md:block w-[220px] lg:w-[280px] h-[calc(100vh-5rem)] fixed left-0 top-20 overflow-y-auto">
-            <div className="flex h-full max-h-screen flex-col gap-2">
-                {/* Branding removed as it's now in the full-width header */}
-                <div className="flex-1">
-                    <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+        <div className="hidden border-r bg-primary text-primary-foreground md:block w-[220px] lg:w-[280px] h-screen fixed left-0 top-0 overflow-y-auto shadow-xl z-50">
+            <div className="flex h-full flex-col">
+                <div className="flex h-20 items-center px-6 border-b border-primary-foreground/10 bg-primary-foreground/5">
+                    <Link to="/dashboard" className="flex items-center gap-2 font-semibold">
+                        <Building2 className="h-6 w-6 text-accent" />
+                        <span className="text-xl tracking-tight font-bold">CivicEase</span>
+                    </Link>
+                </div>
+
+                <div className="flex-1 py-6">
+                    <nav className="grid items-start px-4 text-sm font-medium gap-2">
                         {navItems.map((item) => (
                             <Link
                                 key={item.href}
                                 to={item.href}
-                                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary hover:bg-muted ${isActive(item.href)
-                                    ? "bg-muted text-primary"
-                                    : "text-muted-foreground"
+                                className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200 group ${isActive(item.href)
+                                    ? "bg-accent text-accent-foreground shadow-md"
+                                    : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-white"
                                     }`}
                             >
-                                <item.icon className="h-4 w-4" />
+                                <item.icon className={`h-5 w-5 ${isActive(item.href) ? "text-accent-foreground" : "text-primary-foreground/70 group-hover:text-white"}`} />
                                 {item.label}
                             </Link>
                         ))}
                     </nav>
                 </div>
-                <div className="mt-auto p-4">
-                    <Button variant="outline" className="w-full flex gap-2" onClick={handleLogout}>
+
+                <div className="mt-auto p-6 border-t border-primary-foreground/10">
+                    <Button
+                        variant="ghost"
+                        className="w-full flex gap-2 justify-start text-primary-foreground/70 hover:text-white hover:bg-primary-foreground/10"
+                        onClick={handleLogout}
+                    >
+                        <LogOut className="h-5 w-5" />
                         Logout
                     </Button>
                 </div>

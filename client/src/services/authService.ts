@@ -12,12 +12,14 @@ const login = async (userData: any) => {
     const response = await api.post('/auth/login', userData);
     if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        localStorage.setItem('official', JSON.stringify(response.data));
     }
     return response.data;
 };
 
 const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('official');
 };
 
 const authService = {

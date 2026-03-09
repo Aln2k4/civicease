@@ -1,0 +1,4 @@
+name,dob,gender,maritalStatus,houseName,ward,place,pinCode,contactNumber,fatherName,motherName,spouseName,alternateMobile,email,uniqueId,rationCardNumber,electionId,drivingLicence,passportNumber,religion,caste,communityCategory,occupation,annualIncome,familyAnnualIncome
+John Doe,1990-01-01,Male,Single,Rose Villa,12,Kottayam,686501,9876543210,Robert Doe,Mary Doe,,9876500000,john@example.com,A1234,R123,E123,D123,P123,Christian,RC,General,Engineer,500000,1000000
+Jane Smith,1995-05-15,Female,Married,Lily House,10,Pala,686575,8765432109,Thomas Smith,Sarah Smith,John Smith,,jane@example.com,A5678,R456,E456,D456,P456,Hindu,Nair,General,Teacher,400000,800000
+Ali Khan,1985-11-20,Male,Married,Khan Manzil,5,Erattupetta,686121,7654321098,Omar Khan,Fatima Khan,Aisha Khan,,ali@example.com,A9012,R789,,D789,P789,Muslim,Sunni,OBC,Business,1200000,2000000

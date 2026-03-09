@@ -1,7 +1,7 @@
 import api from './api';
 
-const getAll = async () => {
-    const response = await api.get('/services');
+const getAll = async (params?: any) => {
+    const response = await api.get('/services', { params });
     return response.data;
 };
 

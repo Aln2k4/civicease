@@ -1,8 +1,17 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { useAuth } from "@/context/AuthContext";
+import AdminLayout from "./AdminLayout";
 
 export default function Layout() {
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
+
+    if (isAdmin) {
+        return <AdminLayout />;
+    }
+
     return (
         <div className="min-h-screen w-full bg-muted/40">
             <Header />

@@ -11,7 +11,25 @@ const protect = async (req, res, next) => {
         try {
             token = req.headers.authorization.split(' ')[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+            // Fetch user to check role
             req.user = await Official.findById(decoded.id).select('-password');
+
+            if (!req.user) {
+                return res.status(401).json({ message: 'User not found' });
+            }
+
+            // STRICT: Check for village context in token, UNLESS user is Admin
+            if (req.user.role !== 'Admin' && req.user.role !== 'admin' && !decoded.villageId) {
+                return res.status(403).json({ message: 'Village context missing from token. please login again.' });
+            }
+
+            // Attach villageId strictly from token (or DB, but token is the signed contract)
+            req.villageId = decoded.villageId || null;
+
+            // Double check DB consistency (Optional but good for strictness)
+            // if (req.user.villageOfficeId.toString() !== req.villageId) { ... }
+
             next();
         } catch (error) {
             console.error(error);
@@ -32,4 +50,15 @@ const admin = (req, res, next) => {
     }
 };
 
-module.exports = { protect, admin };
+const authorize = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                message: `User role ${req.user.role} is not authorized to access this route`
+            });
+        }
+        next();
+    };
+};
+
+module.exports = { protect, admin, authorize };

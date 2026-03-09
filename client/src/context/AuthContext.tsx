@@ -1,17 +1,24 @@
-import { createContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useEffect, useContext, type ReactNode } from 'react';
 import authService from '../services/authService';
 
 interface User {
     _id: string;
     name: string;
-    email: string;
+    email: string; // Keep for legacy, though might be unused for pure officers
+    username?: string; // Added username
     role: string;
+    villageOfficeId?: string; // Added context
+    villageContext?: {
+        villageName: string;
+        district: string;
+        taluk: string;
+    };
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
-    login: (userData: any) => Promise<void>;
+    login: (identifier: string, password: string) => Promise<void>; // Updated signature
     logout: () => void;
 }
 
@@ -22,20 +29,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            // In a real app, verify token or decode it. For simplicity, we assume logged in if token exists.
-            // You might want to fetch user details from /api/auth/me if implemented.
-            // Here we just set a partial state or rely on protected routes to re-auth.
-            // For now, let's keep it null until explicit login or decoding.
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
         }
     }, []);
 
-    const login = async (userData: any) => {
+    const login = async (identifier: string, password: string) => {
         setIsLoading(true);
         try {
-            const data = await authService.login(userData);
+            const data = await authService.login({ identifier, password });
             setUser(data);
+            localStorage.setItem('user', JSON.stringify(data));
         } catch (error) {
             console.error(error);
             throw error;
@@ -47,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = () => {
         authService.logout();
         setUser(null);
+        localStorage.removeItem('user');
     };
 
     return (
@@ -54,4 +60,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             {children}
         </AuthContext.Provider>
     );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 };

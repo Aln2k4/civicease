@@ -1,7 +1,7 @@
 import api from './api';
 
-const getAll = async () => {
-    const response = await api.get('/citizens');
+const getAll = async (params?: any) => {
+    const response = await api.get('/citizens', { params });
     return response.data;
 };
 
@@ -20,11 +20,23 @@ const update = async (id: string, data: any) => {
     return response.data;
 };
 
+const uploadCSV = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/citizens/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
 const citizenService = {
     getAll,
     getById,
     create,
     update,
+    uploadCSV,
 };
 
 export default citizenService;

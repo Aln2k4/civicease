@@ -1,25 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const {
-    getFamilies,
-    createFamily,
-    getFamilyById,
-    addMemberToFamily,
-    removeMemberFromFamily
-} = require('../controllers/family.controller');
+const familyController = require('../controllers/family.controller');
 const { protect } = require('../middleware/authMiddleware');
 
-router.route('/')
-    .get(protect, getFamilies)
-    .post(protect, createFamily);
+const upload = require('../middleware/multer.config');
 
-router.route('/:id')
-    .get(protect, getFamilyById);
+// Protect all routes
+router.use(protect);
 
-router.route('/:id/members')
-    .post(protect, addMemberToFamily);
+router.get('/', familyController.getFamilies);
+router.post('/', familyController.createFamily);
+router.get('/available-citizens', familyController.getAvailableCitizens);
+router.get('/:id', familyController.getFamilyById);
 
-router.route('/:id/members/remove')
-    .post(protect, removeMemberFromFamily);
+// Remove Member (Using PUT for FormData support)
+// Remove Member (Using PUT for FormData support)
+router.put('/:id/members/:memberId/remove', upload.single('certificate'), familyController.removeMember);
+
+router.post('/upload', upload.single('file'), familyController.uploadFamilies);
 
 module.exports = router;

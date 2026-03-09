@@ -8,6 +8,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Serve static files
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Database Connection
 // connectDB(); // Removed redundant call - already called in server.js
 
@@ -22,11 +26,15 @@ const citizenRoutes = require('./routes/citizen.routes');
 const familyRoutes = require('./routes/family.routes');
 const serviceRoutes = require('./routes/service.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const certificateRoutes = require('./routes/certificate.routes');
+const uploadRoutes = require('./routes/upload.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/citizens', citizenRoutes);
 app.use('/api/families', familyRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/upload', uploadRoutes);
 
 module.exports = app;

@@ -10,7 +10,17 @@ import {
     CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import citizenService from "@/services/citizenService";
+
+interface Address {
+    houseName?: string;
+    place?: string;
+    village?: string;
+    taluk?: string;
+    district?: string;
+    pinCode?: string;
+}
 
 interface Citizen {
     _id: string;
@@ -18,16 +28,48 @@ interface Citizen {
     dob?: string;
     age: number;
     gender: string;
+    maritalStatus?: string;
+
+    // Present Address
     houseName?: string;
     place?: string;
-    locality?: string;
-    district?: string;
-    address: string;
+    ward?: string;
+    pinCode?: string;
+
+    // Permanent Address
+    permanentAddress?: Address;
+    isPermanentSameAsPresent?: boolean;
+
+    // Contact
     contactNumber: string;
-    uniqueId: string;
+    alternateMobile?: string;
+    email?: string;
+
+    // Family
+    fatherName?: string;
+    motherName?: string;
+    spouseName?: string;
+
+    // Stats/System
+    uniqueId?: string;
     headOfFamily: boolean;
     occupation?: string;
     annualIncome?: number;
+    familyAnnualIncome?: number;
+
+    // IDs
+    rationCardNumber?: string;
+    electionId?: string;
+    drivingLicence?: string;
+    passportNumber?: string;
+
+    // Community
+    religion?: string;
+    caste?: string;
+    communityCategory?: string;
+
+    // Documents
+    birthCertificate?: string; // Path to file
 }
 
 export default function CitizenDetails() {
@@ -72,80 +114,191 @@ export default function CitizenDetails() {
         );
     }
 
+    const DetailItem = ({ label, value }: { label: string, value?: string | number }) => (
+        <div className="grid gap-1">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">{label}</Label>
+            <p className="font-medium text-sm">{value || "N/A"}</p>
+        </div>
+    );
+
+    const calculateAge = (dobStr?: string): number | string => {
+        if (!dobStr) return citizen.age || "N/A";
+        const dob = new Date(dobStr);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     return (
-        <main className="flex flex-col items-center w-full mt-8">
-            <Card className="w-full max-w-3xl">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Citizen Details</CardTitle>
-                    <CardDescription>Full information for {citizen.name}</CardDescription>
+        <main className="flex flex-col items-center w-full mt-8 pb-10">
+            <Card className="w-full max-w-4xl shadow-md">
+                <CardHeader className="bg-slate-50/50 border-b">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle className="text-2xl text-primary">Citizen Details</CardTitle>
+                            <CardDescription>Full profile information for {citizen.name}</CardDescription>
+                        </div>
+                        {citizen.headOfFamily && (
+                            <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-semibold border border-primary/20">
+                                Head of Family
+                            </span>
+                        )}
+                    </div>
                 </CardHeader>
-                <CardContent className="grid gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Name</Label>
-                            <p className="font-medium">{citizen.name}</p>
-                        </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Unique ID (Aadhaar)</Label>
-                            <p className="font-medium">{citizen.uniqueId}</p>
-                        </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Date of Birth</Label>
-                            <p className="font-medium">{citizen.dob ? new Date(citizen.dob).toLocaleDateString() : 'N/A'}</p>
-                        </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Age</Label>
-                            <p className="font-medium">{citizen.age}</p>
-                        </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Gender</Label>
-                            <p className="font-medium">{citizen.gender}</p>
-                        </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Mobile Number</Label>
-                            <p className="font-medium">{citizen.contactNumber}</p>
-                        </div>
+                <CardContent className="grid gap-8 p-6">
 
-                        <div className="grid gap-1 md:col-span-2">
-                            <Label className="text-muted-foreground">Address Details</Label>
-                            <div className="text-sm space-y-1">
-                                {/* Fallback parsing if individual fields are missing */}
-                                {(() => {
-                                    const house = citizen.houseName || (citizen.address ? citizen.address.split(',')[0]?.trim() : 'N/A');
-                                    const place = citizen.place || (citizen.address ? citizen.address.split(',')[1]?.trim() : 'N/A');
-                                    const locality = citizen.locality || (citizen.address ? citizen.address.split(',')[2]?.trim() : 'N/A');
-                                    const district = citizen.district || (citizen.address ? citizen.address.split(',')[3]?.trim() : 'N/A');
+                    {/* Section 1: Personal Information */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            1. Personal Information
+                        </h3>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <DetailItem label="Full Name" value={citizen.name} />
+                            <DetailItem label="Date of Birth" value={citizen.dob ? new Date(citizen.dob).toLocaleDateString() : undefined} />
+                            <DetailItem label="Age" value={calculateAge(citizen.dob)} />
+                            <DetailItem label="Gender" value={citizen.gender} />
+                            <DetailItem label="Marital Status" value={citizen.maritalStatus} />
+                            <DetailItem label="Occupation" value={citizen.occupation} />
 
-                                    return (
-                                        <>
-                                            <p><span className="font-semibold">House:</span> {house}</p>
-                                            <p><span className="font-semibold">Place:</span> {place}</p>
-                                            <p><span className="font-semibold">Locality:</span> {locality}</p>
-                                            <p><span className="font-semibold">District:</span> {district}</p>
-                                        </>
-                                    );
-                                })()}
+                            {citizen.occupation === 'Student' ? (
+                                <DetailItem label="Family Annual Income" value={citizen.familyAnnualIncome ? `₹${citizen.familyAnnualIncome}` : undefined} />
+                            ) : (
+                                <DetailItem label="Annual Income" value={citizen.annualIncome ? `₹${citizen.annualIncome}` : undefined} />
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Section 2: Address Details */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            2. Address Details
+                        </h3>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="bg-slate-50 p-4 rounded-md border">
+                                <h4 className="font-semibold text-sm mb-3 text-slate-600 uppercase">Present Address</h4>
+                                <div className="space-y-2 text-sm">
+                                    <p><span className="text-muted-foreground">House:</span> {citizen.houseName || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">Ward:</span> {citizen.ward || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">Place:</span> {citizen.place || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">PIN Code:</span> {citizen.pinCode || "N/A"}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-50 p-4 rounded-md border">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="font-semibold text-sm text-slate-600 uppercase">Permanent Address</h4>
+                                    {citizen.isPermanentSameAsPresent && (
+                                        <span className="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600">Same as Present</span>
+                                    )}
+                                </div>
+                                <div className="space-y-2 text-sm">
+                                    <p><span className="text-muted-foreground">House:</span> {citizen.permanentAddress?.houseName || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">Place:</span> {citizen.permanentAddress?.place || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">Village:</span> {citizen.permanentAddress?.village || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">Taluk:</span> {citizen.permanentAddress?.taluk || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">District:</span> {citizen.permanentAddress?.district || "N/A"}</p>
+                                    <p><span className="text-muted-foreground">PIN Code:</span> {citizen.permanentAddress?.pinCode || "N/A"}</p>
+                                </div>
                             </div>
                         </div>
+                    </section>
 
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Head of Family</Label>
-                            <p className="font-medium">{citizen.headOfFamily ? "Yes" : "No"}</p>
+                    {/* Section 3: Family & Relationships */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            3. Family Information
+                        </h3>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <DetailItem label="Father's Name" value={citizen.fatherName} />
+                            <DetailItem label="Mother's Name" value={citizen.motherName} />
+                            {citizen.maritalStatus === 'Married' && (
+                                <DetailItem label="Spouse Name" value={citizen.spouseName} />
+                            )}
                         </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Occupation</Label>
-                            <p className="font-medium">{citizen.occupation || 'N/A'}</p>
+                    </section>
+
+                    {/* Section 4: Contact Information */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            4. Contact Information
+                        </h3>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <DetailItem label="Mobile Number" value={citizen.contactNumber} />
+                            <DetailItem label="Alternate Mobile" value={citizen.alternateMobile} />
+                            <DetailItem label="Email ID" value={citizen.email} />
                         </div>
-                        <div className="grid gap-1">
-                            <Label className="text-muted-foreground">Annual Income</Label>
-                            <p className="font-medium">{citizen.annualIncome || '0'}</p>
+                    </section>
+
+                    {/* Section 5: IDs and Documents */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            5. Identity Documents
+                        </h3>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <DetailItem label="Aadhaar (Unique ID)" value={citizen.uniqueId} />
+                            <DetailItem label="Ration Card" value={citizen.rationCardNumber} />
+                            <DetailItem label="Voter ID" value={citizen.electionId} />
+                            <DetailItem label="Driving Licence" value={citizen.drivingLicence} />
+                            <DetailItem label="Passport" value={citizen.passportNumber} />
                         </div>
-                    </div>
+                    </section>
+
+                    {/* Section 6: Community & Religion */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            6. Community & Religion
+                        </h3>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <DetailItem label="Religion" value={citizen.religion} />
+                            <DetailItem label="Caste" value={citizen.caste} />
+                            <DetailItem label="Category" value={citizen.communityCategory} />
+                        </div>
+                    </section>
+
+                    {/* Section 7: Birth Certificate */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            7. Birth Certificate
+                        </h3>
+                        <Separator />
+                        <div className="bg-slate-50 p-4 border rounded-md">
+                            {citizen.birthCertificate ? (
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-slate-600">Uploaded Document:</p>
+                                    <div className="relative w-full max-w-sm overflow-hidden rounded-lg border bg-white shadow-sm">
+                                        {/* Assuming server serves uploads at /uploads base URL */}
+                                        <img
+                                            src={`http://localhost:5000/${citizen.birthCertificate}`}
+                                            alt="Birth Certificate"
+                                            className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                                            onClick={() => window.open(`http://localhost:5000/${citizen.birthCertificate}`, '_blank')}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground pt-1">Click image to view full size.</p>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-red-500 font-medium">No Birth Certificate Uploaded.</p>
+                            )}
+                        </div>
+                    </section>
+
                 </CardContent>
-                <CardFooter className="flex justify-end">
-                    <Button onClick={() => navigate('/citizens')}>Back to List</Button>
+                <CardFooter className="flex justify-between border-t p-6 bg-slate-50/50">
+                    <Button variant="outline" onClick={() => navigate('/citizens')}>&larr; Back to List</Button>
+                    {/* Potential future action: Edit Citizen */}
+                    {/* <Button variant="default">Edit Details</Button> */}
                 </CardFooter>
             </Card>
-        </main>
+        </main >
     );
 }

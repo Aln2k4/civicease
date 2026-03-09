@@ -1,0 +1,17 @@
+name,dob,gender,maritalStatus,houseName,ward,place,pinCode,contactNumber,fatherName,motherName,spouseName,alternateMobile,email,uniqueId,rationCardNumber,electionId,drivingLicence,passportNumber,religion,caste,communityCategory,occupation,annualIncome,familyAnnualIncome
+John Doe,1990-01-01,Male,Married,Rose Villa,7,Pattom,695004,9876543210,Robert Doe,Mary Doe,Jane Doe,9876500000,john@example.com,A1234,R123,E123,D123,P123,Christian,RC,General,Engineer,500000,1000000
+Jane Doe,1992-03-05,Female,Married,Rose Villa,7,Pattom,695004,9876501111,Thomas Varghese,Elsa Varghese,John Doe,,jane.doe@example.com,A1235,R123,E124,D124,P124,Christian,RC,General,Nurse,350000,1000000
+Chris Doe,2018-07-12,Male,Single,Rose Villa,7,Pattom,695004,9876502222,John Doe,Jane Doe,, ,chris@example.com,A1236,R123,, , ,Christian,RC,General,Student,0,1000000
+Robert Doe,1960-08-20,Male,Married,Rose Villa,7,Pattom,695004,9876503333,Michael Doe,Anna Doe,Mary Doe,,robert@example.com,A1237,R123,E125,D125,P125,Christian,RC,General,Retired,200000,1000000
+Mary Doe,1965-09-10,Female,Married,Rose Villa,7,Pattom,695004,9876504444,Joseph Mathew,Lisa Mathew,Robert Doe,,mary@example.com,A1238,R123,E126,D126,P126,Christian,RC,General,Homemaker,0,1000000
+Rahul Nair,1988-04-11,Male,Married,Nair Bhavan,9,Pattom,695004,8765432109,Gopal Nair,Leela Nair,Anitha Nair,8765400000,rahul@example.com,A2234,R223,E223,D223,P223,Hindu,Nair,General,Government Staff,600000,1200000
+Anitha Nair,1991-06-15,Female,Married,Nair Bhavan,9,Pattom,695004,8765432110,Krishnan Pillai,Radha Pillai,Rahul Nair,,anitha@example.com,A2235,R223,E224,D224,P224,Hindu,Nair,General,Bank Clerk,400000,1200000
+Arjun Nair,2015-10-10,Male,Single,Nair Bhavan,9,Pattom,695004,8765432111,Rahul Nair,Anitha Nair,, ,arjun@example.com,A2236,R223,, , ,Hindu,Nair,General,Student,0,1200000
+Gopal Nair,1962-12-25,Male,Married,Nair Bhavan,9,Pattom,695004,8765432112,Raman Nair,Devaki Nair,Leela Nair,,gopal@example.com,A2237,R223,E225,D225,P225,Hindu,Nair,General,Retired,150000,1200000
+Leela Nair,1967-05-18,Female,Married,Nair Bhavan,9,Pattom,695004,8765432113,Madhavan Nair,Savithri Nair,Gopal Nair,,leela@example.com,A2238,R223,E226,D226,P226,Hindu,Nair,General,Homemaker,0,1200000
+Ali Khan,1985-11-20,Male,Married,Khan Manzil,4,Pattom,695004,7654321098,Omar Khan,Fatima Khan,Aisha Khan,,ali@example.com,A3234,R323,E323,D323,P323,Muslim,Sunni,OBC,Business,1200000,2200000
+Aisha Khan,1989-02-14,Female,Married,Khan Manzil,4,Pattom,695004,7654321099,Yusuf Khan,Salma Khan,Ali Khan,,aisha@example.com,A3235,R323,E324,D324,P324,Muslim,Sunni,OBC,Teacher,500000,2200000
+Imran Khan,2012-03-21,Male,Single,Khan Manzil,4,Pattom,695004,7654321100,Ali Khan,Aisha Khan,, ,imran@example.com,A3236,R323,, , ,Muslim,Sunni,OBC,Student,0,2200000
+Sara Khan,2016-09-19,Female,Single,Khan Manzil,4,Pattom,695004,7654321101,Ali Khan,Aisha Khan,, ,sara@example.com,A3237,R323,, , ,Muslim,Sunni,OBC,Student,0,2200000
+Omar Khan,1958-07-07,Male,Married,Khan Manzil,4,Pattom,695004,7654321102,Karim Khan,Zainab Khan,Fatima Khan,,omar@example.com,A3238,R323,E325,D325,P325,Muslim,Sunni,OBC,Retired,200000,2200000
+Fatima Khan,1962-11-11,Female,Married,Khan Manzil,4,Pattom,695004,7654321103,Ismail Khan,Amina Khan,Omar Khan,,fatima@example.com,A3239,R323,E326,D326,P326,Muslim,Sunni,OBC,Homemaker,0,2200000

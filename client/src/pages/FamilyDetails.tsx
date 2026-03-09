@@ -7,7 +7,6 @@ import {
     CardHeader,
     CardTitle,
     CardDescription,
-    CardFooter,
 } from "@/components/ui/card";
 import {
     Dialog,
@@ -27,9 +26,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2, Network } from "lucide-react";
 import familyService from "@/services/familyService";
-import citizenService from "@/services/citizenService";
+import FamilyTreeVisualizer from "@/components/FamilyTreeVisualizer";
 
 interface Citizen {
     _id: string;
@@ -53,6 +52,7 @@ interface Family {
     village: string;
     wardNumber: string;
     rationCardNumber: string;
+    totalAnnualIncome: number;
 }
 
 export default function FamilyDetails() {
@@ -61,10 +61,12 @@ export default function FamilyDetails() {
     const [family, setFamily] = useState<Family | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
+    const [isTreeOpen, setIsTreeOpen] = useState(false);
 
     // Add Member State
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [availableCitizens, setAvailableCitizens] = useState<Citizen[]>([]);
     const [searchResults, setSearchResults] = useState<Citizen[]>([]);
     const [selectedCitizenId, setSelectedCitizenId] = useState("");
     const [selectedRelationship, setSelectedRelationship] = useState("");
@@ -74,6 +76,7 @@ export default function FamilyDetails() {
     const [isRemoveOpen, setIsRemoveOpen] = useState(false);
     const [memberToRemove, setMemberToRemove] = useState<Citizen | null>(null);
     const [removeReason, setRemoveReason] = useState("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isRemoving, setIsRemoving] = useState(false);
 
     useEffect(() => {
@@ -94,26 +97,40 @@ export default function FamilyDetails() {
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchQuery) return;
-        try {
-            // In a real app, use a search API. Here catching all and filtering client side for simplicity demo
-            // or assume citizenService.getAll is fast enough. 
-            // Ideally: citizenService.search(searchQuery)
-            const allCitizens = await citizenService.getAll();
-            const filtered = allCitizens.filter((c: Citizen) =>
-                c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                c.uniqueId.includes(searchQuery)
-            );
-            // Exclude existing members
-            const existingIds = family?.members.map(m => m._id) || [];
-            if (family?.headOfFamily) existingIds.push(family.headOfFamily._id);
+    // Load available citizens when dialog opens
+    useEffect(() => {
+        if (isAddMemberOpen) {
+            fetchAvailableCitizens();
+        } else {
+            setSearchQuery("");
+            setSearchResults([]);
+            setSelectedCitizenId("");
+            setSelectedRelationship("");
+        }
+    }, [isAddMemberOpen]);
 
-            setSearchResults(filtered.filter((c: Citizen) => !existingIds.includes(c._id)));
+    const fetchAvailableCitizens = async () => {
+        try {
+            const citizens = await familyService.getAvailableCitizens();
+            setAvailableCitizens(citizens);
+            setSearchResults(citizens); // Show all initially
         } catch (err) {
-            console.error("Search failed", err);
+            console.error("Failed to load available citizens", err);
         }
     };
+
+    // Filter locally when user types
+    useEffect(() => {
+        if (!searchQuery) {
+            setSearchResults(availableCitizens);
+        } else {
+            const filtered = availableCitizens.filter((c: Citizen) =>
+                c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (c.uniqueId && c.uniqueId.includes(searchQuery))
+            );
+            setSearchResults(filtered);
+        }
+    }, [searchQuery, availableCitizens]);
 
     const handleAddMember = async () => {
         if (!selectedCitizenId || !id) return;
@@ -134,14 +151,15 @@ export default function FamilyDetails() {
     };
 
     const handleRemoveMember = async () => {
-        if (!memberToRemove || !id || !removeReason) return;
+        if (!memberToRemove || !id || !removeReason || !selectedFile) return;
         setIsRemoving(true);
         try {
-            const updatedFamily = await familyService.removeMember(id, memberToRemove._id, removeReason);
+            const updatedFamily = await familyService.removeMember(id, memberToRemove._id, removeReason, selectedFile);
             setFamily(updatedFamily);
             setIsRemoveOpen(false);
             setMemberToRemove(null);
             setRemoveReason("");
+            setSelectedFile(null);
         } catch (err: any) {
             alert(err.response?.data?.message || "Failed to remove member");
         } finally {
@@ -181,6 +199,9 @@ export default function FamilyDetails() {
                         <div>
                             <span className="font-semibold">Ward:</span> {family.wardNumber}
                         </div>
+                        <div>
+                            <span className="font-semibold">Total Annual Income:</span> ₹{family.totalAnnualIncome}
+                        </div>
                     </div>
 
                     <div className="border-t pt-4">
@@ -192,6 +213,9 @@ export default function FamilyDetails() {
                                         <Plus className="h-4 w-4" /> Add Member
                                     </Button>
                                 </DialogTrigger>
+                                <Button size="sm" variant="outline" className="gap-2 ml-2" onClick={() => setIsTreeOpen(true)}>
+                                    <Network className="h-4 w-4" /> View Family Tree
+                                </Button>
                                 <DialogContent className="sm:max-w-[425px]">
                                     <DialogHeader>
                                         <DialogTitle>Add Family Member</DialogTitle>
@@ -202,11 +226,11 @@ export default function FamilyDetails() {
                                     <div className="grid gap-4 py-4">
                                         <div className="flex gap-2">
                                             <Input
-                                                placeholder="Search by name or ID"
+                                                placeholder="Search available citizens..."
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
-                                            <Button size="icon" onClick={handleSearch}>
+                                            <Button size="icon" variant="ghost" disabled>
                                                 <Search className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -261,15 +285,22 @@ export default function FamilyDetails() {
 
                         <div className="bg-muted/50 rounded-md p-2">
                             {family.members && family.members.length > 0 ? (
-                                <ul className="space-y-2">
-                                    {family.members.map(member => (
-                                        <li key={member._id} className="flex justify-between items-center bg-background p-3 rounded shadow-sm">
+                                <ul className="space-y-4">
+                                    {family.members.map((member: any) => (
+                                        <li key={member._id} className="flex justify-between items-start bg-background p-4 rounded shadow-sm">
                                             <div>
-                                                <span className="font-medium">{member.name}</span>
-                                                {member.relationshipToHead && <span className="text-xs text-muted-foreground ml-2">({member.relationshipToHead})</span>}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-lg">{member.name}</span>
+                                                    <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">{member.relationshipToHead}</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-2 text-sm text-muted-foreground">
+                                                    <span>Age: {member.age}</span>
+                                                    <span>Gender: {member.gender}</span>
+                                                    <span>Income: ₹{member.annualIncome || 0}</span>
+                                                    <span>ID: {member.uniqueId}</span>
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs text-muted-foreground">{member.uniqueId}</span>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openRemoveDialog(member)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -326,10 +357,18 @@ export default function FamilyDetails() {
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                    <div className="grid gap-2">
+                                        <Label>Certificate (Required)</Label>
+                                        <Input
+                                            type="file"
+                                            accept="image/*,.pdf"
+                                            onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                                        />
+                                    </div>
                                 </div>
                                 <DialogFooter>
                                     <Button variant="outline" onClick={() => setIsRemoveOpen(false)}>Cancel</Button>
-                                    <Button variant="destructive" onClick={handleRemoveMember} disabled={!removeReason || isRemoving}>
+                                    <Button variant="destructive" onClick={handleRemoveMember} disabled={!removeReason || !selectedFile || isRemoving}>
                                         {isRemoving ? "Removing..." : "Remove Member"}
                                     </Button>
                                 </DialogFooter>
@@ -338,6 +377,12 @@ export default function FamilyDetails() {
                     </div>
                 </CardContent>
             </Card>
+
+            <FamilyTreeVisualizer
+                isOpen={isTreeOpen}
+                onClose={() => setIsTreeOpen(false)}
+                family={family}
+            />
         </main>
     );
 }

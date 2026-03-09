@@ -3,10 +3,17 @@ const bcrypt = require('bcryptjs');
 
 const officialSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, unique: true, sparse: true }, // Made sparse/optional given strictly username login might be preferred, but kept for legacy
+    username: { type: String, required: true, unique: true }, // Auto-generated
     password: { type: String, required: true },
-    role: { type: String, enum: ['Admin', 'Official'], default: 'Official' },
+    role: { type: String, enum: ['Admin', 'Official', 'Revenue Officer'], default: 'Revenue Officer' },
     department: { type: String },
+    villageOfficeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'VillageOffice',
+        required: function () { return this.role !== 'Admin' && this.role !== 'admin'; },
+        // unique: true exists but for a single admin, null is fine
+    },
     createdAt: { type: Date, default: Date.now }
 });
 

@@ -5,6 +5,9 @@ dotenv.config();
 
 connectDB();
 
+// Start Worker
+require('./src/workers/index');
+
 const app = require('./src/app');
 
 const PORT = process.env.PORT || 5000;

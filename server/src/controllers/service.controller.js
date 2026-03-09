@@ -1,16 +1,179 @@
 const ServiceRecord = require('../models/ServiceRecord');
+const Citizen = require('../models/Citizen');
+const { generateVerificationChecklist } = require('../utils/verificationEngine');
 
+// @desc    Get all service records
+// @route   GET /api/services
+// @access  Private
 // @desc    Get all service records
 // @route   GET /api/services
 // @access  Private
 const getServices = async (req, res) => {
     try {
-        const services = await ServiceRecord.find({})
-            .populate('applicant', 'name')
-            .populate('officialId', 'name');
+        const { status, search, serviceName } = req.query;
+        const villageId = req.villageId;
+
+        // STRICT JURISDICTION CHECK
+        const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'admin');
+        if (!villageId && !isAdmin) {
+            return res.status(403).json({ message: "Jurisdiction context missing." });
+        }
+
+        // 1. Base Query with Village ID
+        let serviceQuery = isAdmin ? {} : { villageId };
+
+        // 2. Search Logic (if needed, populate or regex)
+        if (search) {
+            // For advanced search we might still need to look up citizens or aggregate
+            // But for now, let's keep it simple or use the population match if supported.
+            // Mongo doesn't easily regex on populated fields in a simple find() without aggregate.
+            // Reverting to the logic of finding citizens first IF search is present, 
+            // BUT strictly constraining those citizens to the village.
+
+            // ... actually the previous logic did "Find Citizens in Village matching search", then "Find Services for those".
+            // We can keep that for Search, but use direct villageId for general list.
+
+            const Citizen = require('../models/Citizen');
+            const searchRegex = new RegExp(search, 'i');
+
+            const citizenSearchQuery = {
+                $or: [{ name: searchRegex }, { ward: searchRegex }, { houseName: searchRegex }]
+            };
+            if (!isAdmin) {
+                citizenSearchQuery.villageOfficeId = villageId;
+            }
+
+            const citizens = await Citizen.find(citizenSearchQuery).select('_id');
+
+            const citizenIds = citizens.map(c => c._id);
+            serviceQuery.applicant = { $in: citizenIds };
+        }
+
+        if (req.query.applicantId) {
+            serviceQuery.applicant = req.query.applicantId;
+        }
+
+        if (status && status !== 'All') {
+            serviceQuery.status = status;
+        }
+
+        if (serviceName) {
+            serviceQuery.serviceName = serviceName;
+        }
+
+        const services = await ServiceRecord.find(serviceQuery)
+            .populate('applicant', 'name ward houseName')
+            .populate('officialId', 'name')
+            .sort({ createdAt: -1 });
+
         res.json(services);
     } catch (error) {
+        console.error("Error fetching services:", error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Validate applicant for a certificate request
+// @route   POST /api/services/validate-applicant
+// @access  Private
+const validateApplicant = async (req, res) => {
+    try {
+        const { serviceName, citizenId, uniqueId, rationCardNumber, name, dob, ward, ...formData } = req.body;
+        const villageId = req.villageId;
+        const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'admin');
+
+        // Non-admins must have villageId context.
+        if (!villageId && !isAdmin) {
+            return res.status(403).json({ message: "Jurisdiction context missing." });
+        }
+
+        let citizen = null;
+        let matchPriority = 0; // 1 = Exact ID, 2 = Name/DOB/Ward
+
+        // Base query constraints
+        const baseQuery = isAdmin ? {} : { villageOfficeId: villageId };
+
+        // Priority 1: Exact Match using unique IDs
+        if (citizenId) {
+            citizen = await Citizen.findOne({ _id: citizenId, ...baseQuery }).populate('familyId');
+            matchPriority = 1;
+        } else if (uniqueId) {
+            citizen = await Citizen.findOne({ uniqueId, ...baseQuery }).populate('familyId');
+            matchPriority = 1;
+        } else if (rationCardNumber) {
+            citizen = await Citizen.findOne({ rationCardNumber, ...baseQuery }).populate('familyId');
+            matchPriority = 1;
+        }
+
+        // Priority 2: Name + DOB + Ward
+        if (!citizen && name && dob && ward) {
+            const dobDate = new Date(dob);
+            const startOfDay = new Date(dobDate.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(dobDate.setHours(23, 59, 59, 999));
+
+            const reqQuery = {
+                name: new RegExp(`^${name}$`, 'i'),
+                ward,
+                dob: { $gte: startOfDay, $lte: endOfDay },
+                ...baseQuery
+            };
+
+            const potentialMatches = await Citizen.find(reqQuery).populate('familyId');
+
+            if (potentialMatches.length === 1) {
+                citizen = potentialMatches[0];
+                matchPriority = 2;
+            } else if (potentialMatches.length > 1) {
+                return res.status(409).json({
+                    message: "Multiple records found matching these details. Please provide Aadhaar or Ration Card number.",
+                    conflict: true
+                });
+            }
+        }
+
+        if (!citizen) {
+            return res.status(404).json({
+                message: "Citizen record not found in database. Manual verification required.",
+                manualVerificationRequired: true
+            });
+        }
+
+        // Duplicate Detection
+        const existingService = await ServiceRecord.findOne({
+            applicant: citizen._id,
+            serviceName: serviceName,
+            status: { $in: ['Pending', 'Approved', 'Issued'] }
+        });
+
+        if (existingService) {
+            return res.status(409).json({
+                message: `An application for ${serviceName} is already ${existingService.status} for this citizen.`,
+                duplicate: true,
+                existingRecordId: existingService._id
+            });
+        }
+
+        // Dynamic Verification Engine
+        const checklist = generateVerificationChecklist(serviceName, { uniqueId, rationCardNumber, name, dob, ward, ...formData }, citizen);
+
+        res.json({
+            message: "Citizen matched successfully.",
+            citizenId: citizen._id,
+            matchPriority,
+            profileData: {
+                name: citizen.name,
+                dob: citizen.dob,
+                ward: citizen.ward,
+                houseName: citizen.houseName,
+                familyIncome: citizen.familyAnnualIncome,
+                occupation: citizen.occupation
+            },
+            verificationChecklist: checklist
+        });
+
+    } catch (error) {
+        console.error("Validation error:", error);
+        res.status(500).json({ message: "Server error during validation" });
     }
 };
 
@@ -18,16 +181,22 @@ const getServices = async (req, res) => {
 // @route   POST /api/services
 // @access  Private
 const createService = async (req, res) => {
-    const { serviceName, applicant, familyId, remarks, status } = req.body;
+    const { serviceName, applicant, familyId, remarks, status, verificationDetails } = req.body;
 
     try {
+        if (!req.villageId) {
+            return res.status(403).json({ message: "Jurisdiction context missing." });
+        }
+
         const service = await ServiceRecord.create({
             serviceName,
             applicant,
             familyId,
-            officialId: req.user._id, // From auth middleware
+            officialId: req.user._id,
+            villageId: req.villageId, // Save the village context
             remarks,
-            status
+            status,
+            verificationDetails
         });
 
         res.status(201).json(service);
@@ -36,4 +205,4 @@ const createService = async (req, res) => {
     }
 };
 
-module.exports = { getServices, createService };
+module.exports = { getServices, createService, validateApplicant };

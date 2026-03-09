@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
-import Signup from "./pages/Signup";
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CitizenList from "./pages/CitizenList";
@@ -10,6 +10,8 @@ import FamilyDetails from "./pages/FamilyDetails";
 import AddCitizen from "./pages/AddCitizen";
 import CitizenDetails from "./pages/CitizenDetails";
 import ServiceList from "./pages/ServiceList";
+import ApplyCertificate from "./pages/ApplyCertificate";
+import Officials from "./pages/Officials";
 
 
 function App() {
@@ -17,7 +19,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+
 
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -28,6 +30,8 @@ function App() {
           <Route path="/families/add" element={<AddFamily />} />
           <Route path="/families/:id" element={<FamilyDetails />} />
           <Route path="/services" element={<ServiceList />} />
+          <Route path="/services/apply" element={<ApplyCertificate />} />
+          <Route path="/officials" element={<Officials />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Plus } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,12 +12,21 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import familyService from "@/services/familyService";
 
 export default function Families() {
+    const { user } = useAuth();
     const [families, setFamilies] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedWard, setSelectedWard] = useState<string>("all");
 
     useEffect(() => {
         const fetchFamilies = async () => {
@@ -27,13 +37,18 @@ export default function Families() {
                 console.error("Failed to fetch families", error);
             }
         };
-        fetchFamilies();
-    }, []);
+        if (user) {
+            fetchFamilies();
+        }
+    }, [user]);
+
+    const uniqueWards = Array.from(new Set(families.filter(f => f.wardNumber).map(f => f.wardNumber))).sort((a: any, b: any) => a - b);
 
     const filteredFamilies = families.filter(
         (family) =>
-            family.headOfFamily?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            family.familyName.toLowerCase().includes(searchTerm.toLowerCase())
+            (selectedWard === "all" || family.wardNumber?.toString() === selectedWard) &&
+            ((family.headOfFamily?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (family.familyName || "").toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     return (
@@ -44,6 +59,19 @@ export default function Families() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <Select value={selectedWard} onValueChange={setSelectedWard}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by Ward" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Wards</SelectItem>
+                            {uniqueWards.map((ward) => (
+                                <SelectItem key={ward} value={ward.toString()}>
+                                    Ward {ward}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <div className="relative">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -86,8 +114,8 @@ export default function Families() {
                                         {family.headOfFamily?.name || 'N/A'}
                                     </TableCell>
                                     <TableCell>{family.familyName}</TableCell>
-                                    <TableCell>{family.village}</TableCell>
-                                    <TableCell>{family.wardNumber}</TableCell>
+                                    <TableCell>{family.village || 'N/A'}</TableCell>
+                                    <TableCell>Ward {family.wardNumber}</TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="sm" asChild>
                                             <Link to={`/families/${family._id}`}>View Details</Link>

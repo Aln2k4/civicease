@@ -17,6 +17,8 @@ const serviceRecordSchema = new mongoose.Schema({
     issueDate: { type: Date },
     remarks: { type: String },
     documents: [{ type: String }], // URLs to documents
+    verificationDetails: { type: Object }, // Store the dynamic checklist verification items and statuses
+    villageId: { type: mongoose.Schema.Types.ObjectId, ref: 'VillageOffice', required: true }, // Added for Data Isolation
     createdAt: { type: Date, default: Date.now }
 });
 
