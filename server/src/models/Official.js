@@ -6,7 +6,7 @@ const officialSchema = new mongoose.Schema({
     email: { type: String, unique: true, sparse: true }, // Made sparse/optional given strictly username login might be preferred, but kept for legacy
     username: { type: String, required: true, unique: true }, // Auto-generated
     password: { type: String, required: true },
-    role: { type: String, enum: ['Admin', 'Official', 'Revenue Officer'], default: 'Revenue Officer' },
+    role: { type: String, enum: ['Admin', 'Citizen', 'Clerk', 'Revenue Officer'], default: 'Revenue Officer' },
     department: { type: String },
     villageOfficeId: {
         type: mongoose.Schema.Types.ObjectId,

@@ -32,6 +32,7 @@ interface Citizen {
     dob?: string;
     address?: string; // Present address
     permanentAddress?: any;
+    rationCardNumber?: string;
 }
 
 interface MemberSelection {
@@ -184,13 +185,40 @@ export default function AddFamily() {
     // -- Derived State --
 
     // Filter potential heads: Age >= 18
-    const eligibleHeads = availableCitizens.filter(c => c.age >= 18);
+    const eligibleHeads = availableCitizens
+        .filter(c => c.age >= 18)
+        .filter(c => {
+            if (rationCardNumber && c.rationCardNumber) {
+                return c.rationCardNumber.toLowerCase().includes(rationCardNumber.toLowerCase());
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            if (rationCardNumber) {
+                const aExact = a.rationCardNumber === rationCardNumber ? 1 : 0;
+                const bExact = b.rationCardNumber === rationCardNumber ? 1 : 0;
+                return bExact - aExact;
+            }
+            return 0;
+        });
 
     // Filter potential members: Not Head, Not already selected
-    const eligibleMembers = availableCitizens.filter(c =>
-        c._id !== headId &&
-        !members.find(m => m.citizenId === c._id)
-    );
+    const eligibleMembers = availableCitizens
+        .filter(c => c._id !== headId && !members.find(m => m.citizenId === c._id))
+        .filter(c => {
+            if (rationCardNumber && c.rationCardNumber) {
+                return c.rationCardNumber.toLowerCase().includes(rationCardNumber.toLowerCase());
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            if (rationCardNumber) {
+                const aExact = a.rationCardNumber === rationCardNumber ? 1 : 0;
+                const bExact = b.rationCardNumber === rationCardNumber ? 1 : 0;
+                return bExact - aExact;
+            }
+            return 0;
+        });
 
     if (!jurisdiction) return null;
 
@@ -233,7 +261,7 @@ export default function AddFamily() {
                                 <SelectContent>
                                     {eligibleHeads.map(citizen => (
                                         <SelectItem key={citizen._id} value={citizen._id}>
-                                            {citizen.name} (Age: {citizen.age}, ID: {citizen.uniqueId})
+                                            {citizen.name} (Age: {citizen.age}, ID: {citizen.uniqueId}) {citizen.rationCardNumber ? `[Ration: ${citizen.rationCardNumber}]` : ''}
                                         </SelectItem>
                                     ))}
                                     {eligibleHeads.length === 0 && !isLoadingCitizens && (
@@ -270,7 +298,7 @@ export default function AddFamily() {
                                         <SelectContent>
                                             {eligibleMembers.map(citizen => (
                                                 <SelectItem key={citizen._id} value={citizen._id}>
-                                                    {citizen.name} (Age: {citizen.age})
+                                                    {citizen.name} (Age: {citizen.age}) {citizen.rationCardNumber ? `[Ration: ${citizen.rationCardNumber}]` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

@@ -45,10 +45,30 @@ export function Header() {
 
             <div className="ml-auto flex items-center gap-4">
 
-                <Button variant="ghost" size="icon" className="relative hover:bg-secondary/10 hover:text-primary transition-colors">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-600 ring-2 ring-background" />
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="relative hover:bg-secondary/10 hover:text-primary transition-colors">
+                            <Bell className="h-5 w-5" />
+                            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-600 ring-2 ring-background" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-72">
+                        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="flex flex-col items-start gap-1 p-3 cursor-pointer" onClick={() => navigate('/')}>
+                            <div className="font-semibold text-sm">Login Village Updates</div>
+                            <div className="text-xs text-muted-foreground">Recent software and village administrative updates.</div>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="flex flex-col items-start gap-1 p-3 cursor-pointer" onClick={() => navigate('/services')}>
+                            <div className="flex w-full items-center justify-between">
+                                <div className="font-semibold text-sm">Pending Reminder</div>
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-[10px] font-bold text-red-600">3</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">You have pending applications requiring your review.</div>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

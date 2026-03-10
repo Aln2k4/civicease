@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import serviceService from '../services/serviceService';
 import citizenService from '../services/citizenService';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +28,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import toast from 'react-hot-toast';
 
 interface ServiceRecord {
     _id: string;
@@ -59,6 +62,8 @@ interface Category {
 const ServiceList = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const isPendingQueue = searchParams.get('view') === 'pending';
     const [services, setServices] = useState<ServiceRecord[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
@@ -71,6 +76,12 @@ const ServiceList = () => {
 
     // Filters
     const [statusFilter, setStatusFilter] = useState("All");
+
+    // Details Modal State
+    const [selectedServiceDetails, setSelectedServiceDetails] = useState<ServiceRecord | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [isProcessLoading, setIsProcessLoading] = useState(false);
 
     // Reset state when user changes (e.g. logout/login)
     useEffect(() => {
@@ -85,10 +96,10 @@ const ServiceList = () => {
 
     // Fetch services whenever filters or selected service changes
     useEffect(() => {
-        if (selectedServiceName || selectedCitizen) {
+        if (selectedServiceName || selectedCitizen || isPendingQueue) {
             fetchServices();
         }
-    }, [selectedServiceName, selectedCitizen, statusFilter]);
+    }, [selectedServiceName, selectedCitizen, statusFilter, isPendingQueue]);
 
     // Citizen Search Debounce
     useEffect(() => {
@@ -119,7 +130,19 @@ const ServiceList = () => {
             // If searching by citizen, we might want to see ALL their certificates, or filtered by name.
             if (selectedServiceName) params.serviceName = selectedServiceName;
 
-            if (statusFilter !== "All") params.status = statusFilter;
+            if (statusFilter !== "All") {
+                params.status = statusFilter;
+            } else if (isPendingQueue) {
+                // Determine what 'pending' means based on the user's role 
+                // Alternatively, just fetch all that are NOT Approved/Rejected/Issued
+                params.status = ['Draft', 'Validated', 'Under Review']; // Example: let the backend handle the array or we filter frontend
+                // Since our backend takes a single status string normally, if it supports in, we can send it.
+                // For safety, if backend expects a single string or requires modifications, 
+                // we'll just omit status from params and filter on the frontend for pending items.
+                // Wait, to keep it simple, we just don't pass status here, but let the user select.
+                // Setting default filter based on role is best.
+                // To avoid breaking existing backend, we will NOT send a hardcoded array unless backend supports it.
+            }
 
             // If a citizen is selected, filter by their ID
             if (selectedCitizen) {
@@ -136,8 +159,8 @@ const ServiceList = () => {
                 // to avoid confusion between "search term" and "selected id".
             }
 
-            // Only fetch if we have a context (Service Name selected OR Citizen selected)
-            if (selectedServiceName || selectedCitizen) {
+            // Only fetch if we have a context (Service Name selected OR Citizen selected OR Pending Queue)
+            if (selectedServiceName || selectedCitizen || isPendingQueue) {
                 const data = await serviceService.getAll(params);
                 setServices(data);
             }
@@ -151,21 +174,42 @@ const ServiceList = () => {
         setSelectedCitizen(citizen);
         setCitizenSearch(citizen ? citizen.name : "");
         setShowCitizenResults(false);
-        if (citizen) {
-            // When a citizen is selected, we might want to clear the 'Service Name' filter 
-            // to show ALL certificates for this person, or keep it?
-            // "show issued certificate in that person" implies all of them or relevant ones.
-            // Let's clear selectedServiceName to show ALL their certificates unless user drilled down.
-            // Actually, if we are in a specific category view, maybe we keep it?
-            // But if we are in "Search Mode", we probably want to see everything for that person.
-            // Let's set selectedServiceName to null to show "All Certificates for [Person]" title style if possible, 
-            // or just keep current view if user is inside a service type.
-            // Requirement: "show issued certificate in that person".
-            // I'll default to showing all if they search globally.
-            // But the search bar is inside the "List View" (which appears only when selectedServiceName is set).
-            // Wait, if I want to search ANYONE, I should be able to do it from the categories view too?
-            // The current UI only shows list when `selectedServiceName` is true.
-            // I should allow the list view to trigger if `selectedCitizen` is true even if `selectedServiceName` is null.
+    };
+
+    const handleAction = async (action: 'verify' | 'approve' | 'reject' | 'issue', id: string) => {
+        if (!id) return;
+        setIsProcessLoading(true);
+        try {
+            if (action === 'verify') {
+                await serviceService.verify(id);
+                toast.success("Application marked Under Review");
+            }
+            if (action === 'approve') {
+                await serviceService.approve(id);
+                toast.success("Application Approved");
+            }
+            if (action === 'reject') {
+                if (!rejectionReason.trim()) {
+                    toast.error("Rejection reason is required.");
+                    setIsProcessLoading(false);
+                    return;
+                }
+                await serviceService.reject(id, { reason: rejectionReason });
+                toast.success("Application Rejected");
+            }
+            if (action === 'issue') {
+                await serviceService.issue(id);
+                toast.success("Certificate Issued successfully");
+            }
+
+            setIsDetailsModalOpen(false);
+            setRejectionReason("");
+            fetchServices();
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.message || `Failed to ${action} application`);
+        } finally {
+            setIsProcessLoading(false);
         }
     };
 
@@ -252,6 +296,9 @@ const ServiceList = () => {
         setSelectedServiceName(null);
         setSelectedCitizen(null); // Clear citizen selection
         setServices([]); // Clear services when leaving list view
+        if (isPendingQueue) {
+            navigate('/services');
+        }
     };
 
     return (
@@ -262,22 +309,26 @@ const ServiceList = () => {
                 <div className="flex flex-col md:flex-row gap-4 justify-between md:items-start border-b border-border/40 pb-6">
                     <div className="flex flex-col gap-2">
                         <h1 className="text-3xl font-bold tracking-tight text-primary">
-                            {selectedCitizen
-                                ? `Certificates: ${selectedCitizen.name}`
-                                : selectedServiceName
-                                    ? selectedServiceName
-                                    : selectedCategory
-                                        ? selectedCategory.title
-                                        : "Certificate Services"}
+                            {isPendingQueue
+                                ? "Pending Applications Queue"
+                                : selectedCitizen
+                                    ? `Certificates: ${selectedCitizen.name}`
+                                    : selectedServiceName
+                                        ? selectedServiceName
+                                        : selectedCategory
+                                            ? selectedCategory.title
+                                            : "Certificate Services"}
                         </h1>
                         <p className="text-muted-foreground">
-                            {selectedCitizen
-                                ? `Viewing all certificates issued to ${selectedCitizen.name} (${selectedCitizen.houseName})`
-                                : selectedServiceName
-                                    ? `Manage applications for ${selectedServiceName}`
-                                    : selectedCategory
-                                        ? "Select a specific service to view applications."
-                                        : "Choose a category to find the certificate you need."}
+                            {isPendingQueue
+                                ? "Review and process all pending applications across all services."
+                                : selectedCitizen
+                                    ? `Viewing all certificates issued to ${selectedCitizen.name} (${selectedCitizen.houseName})`
+                                    : selectedServiceName
+                                        ? `Manage applications for ${selectedServiceName}`
+                                        : selectedCategory
+                                            ? "Select a specific service to view applications."
+                                            : "Choose a category to find the certificate you need."}
                         </p>
                     </div>
                     <Button
@@ -320,8 +371,8 @@ const ServiceList = () => {
                     </div>
                 </div>
 
-                {selectedServiceName || selectedCitizen ? (
-                    // 3rd View: Application List for Specific Service
+                {selectedServiceName || selectedCitizen || isPendingQueue ? (
+                    // 3rd View: Application List for Specific Service or Pending Queue
                     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                             <Button
@@ -330,7 +381,7 @@ const ServiceList = () => {
                                 onClick={handleBackToCategory}
                             >
                                 <ArrowLeft className="h-4 w-4" />
-                                Back to {selectedCategory?.title}
+                                {isPendingQueue ? "Back to Categories" : `Back to ${selectedCategory?.title || "Categories"}`}
                             </Button>
 
 
@@ -355,10 +406,12 @@ const ServiceList = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="All">All Status</SelectItem>
-                                    <SelectItem value="Issued">Issued</SelectItem>
-                                    <SelectItem value="Pending">Pending</SelectItem>
+                                    <SelectItem value="Draft">Draft</SelectItem>
+                                    <SelectItem value="Validated">Validated</SelectItem>
+                                    <SelectItem value="Under Review">Under Review</SelectItem>
                                     <SelectItem value="Approved">Approved</SelectItem>
                                     <SelectItem value="Rejected">Rejected</SelectItem>
+                                    <SelectItem value="Issued">Issued</SelectItem>
                                 </SelectContent>
                             </Select>
 
@@ -419,7 +472,15 @@ const ServiceList = () => {
                                                         {new Date(service.createdAt).toLocaleDateString()}
                                                     </td>
                                                     <td className="p-4 text-right">
-                                                        <Button variant="ghost" size="sm">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setSelectedServiceDetails(service);
+                                                                setIsDetailsModalOpen(true);
+                                                                setRejectionReason("");
+                                                            }}
+                                                        >
                                                             View Details
                                                         </Button>
                                                     </td>
@@ -509,6 +570,129 @@ const ServiceList = () => {
                     </div>
                 )}
 
+                {/* Details Modal & Timeline */}
+                <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+                    <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                            <DialogTitle>Application Details</DialogTitle>
+                            <DialogDescription>
+                                {selectedServiceDetails?.serviceName} for {selectedServiceDetails?.applicant?.name}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {selectedServiceDetails && (
+                            <div className="grid gap-4 py-4">
+                                {/* Status Timeline UI */}
+                                <div className="mb-4">
+                                    <h4 className="text-sm font-semibold mb-3">Application Progress</h4>
+                                    <div className="flex items-center justify-between relative">
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted -z-10 rounded-full"></div>
+                                        {['Draft', 'Validated', 'Under Review', 'Approved', 'Issued'].map((step, idx) => {
+                                            const steps = ['Draft', 'Validated', 'Under Review', 'Approved', 'Issued'];
+                                            const currentIdx = steps.indexOf(selectedServiceDetails.status);
+                                            const isRejected = selectedServiceDetails.status === 'Rejected';
+                                            const isPast = !isRejected && currentIdx >= idx;
+                                            const isCurrent = currentIdx === idx;
+
+                                            let dotColor = isPast ? 'bg-primary' : 'bg-muted border-2 border-border';
+                                            if (isRejected && idx <= steps.indexOf('Under Review')) dotColor = 'bg-red-500 border-red-500';
+
+                                            return (
+                                                <div key={step} className="flex flex-col items-center gap-2 bg-background px-2">
+                                                    <div className={`w-4 h-4 rounded-full ${dotColor} ${isCurrent && !isRejected ? 'ring-4 ring-primary/20' : ''}`} />
+                                                    <span className={`text-[10px] font-medium ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>{step}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {selectedServiceDetails.status === 'Rejected' && (
+                                        <div className="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
+                                            <strong>Rejected:</strong> This application was rejected during review.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg">
+                                    <div>
+                                        <span className="text-muted-foreground block text-xs uppercase mb-1">Applicant</span>
+                                        <span className="font-medium">{selectedServiceDetails.applicant?.name}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground block text-xs uppercase mb-1">Status</span>
+                                        <span className="font-medium">{selectedServiceDetails.status}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground block text-xs uppercase mb-1">Ward</span>
+                                        <span className="font-medium">{selectedServiceDetails.applicant?.ward || 'N/A'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground block text-xs uppercase mb-1">Applied Date</span>
+                                        <span className="font-medium">{new Date(selectedServiceDetails.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+
+                                {/* Officer Actions */}
+                                {(user?.role === 'Clerk' || user?.role === 'Admin') && selectedServiceDetails.status === 'Validated' && (
+                                    <div className="mt-4">
+                                        <Button
+                                            className="w-full"
+                                            onClick={() => handleAction('verify', selectedServiceDetails._id)}
+                                            disabled={isProcessLoading}
+                                        >
+                                            {isProcessLoading ? 'Processing...' : 'Mark Under Review (Checklist Verified)'}
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {(user?.role === 'Revenue Officer' || user?.role === 'Admin') && selectedServiceDetails.status === 'Under Review' && (
+                                    <div className="space-y-4 mt-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Button
+                                                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                                onClick={() => handleAction('approve', selectedServiceDetails._id)}
+                                                disabled={isProcessLoading}
+                                            >
+                                                Approve
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                className="w-full"
+                                                onClick={() => handleAction('reject', selectedServiceDetails._id)}
+                                                disabled={isProcessLoading || !rejectionReason.trim()}
+                                            >
+                                                Reject
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Rejection Reason (Required for rejection)</label>
+                                            <Textarea
+                                                placeholder="Provide reason for rejection..."
+                                                value={rejectionReason}
+                                                onChange={(e) => setRejectionReason(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(user?.role === 'Revenue Officer' || user?.role === 'Admin') && selectedServiceDetails.status === 'Approved' && (
+                                    <div className="mt-4">
+                                        <Button
+                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                            onClick={() => handleAction('issue', selectedServiceDetails._id)}
+                                            disabled={isProcessLoading}
+                                        >
+                                            Issue Final Certificate
+                                        </Button>
+                                    </div>
+                                )}
+
+                            </div>
+                        )}
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)}>Close</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
             </div>
         </div >

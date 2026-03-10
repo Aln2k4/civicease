@@ -12,6 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import citizenService from "@/services/citizenService";
+import serviceService from "@/services/serviceService";
 
 interface Address {
     houseName?: string;
@@ -76,6 +77,7 @@ export default function CitizenDetails() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [citizen, setCitizen] = useState<Citizen | null>(null);
+    const [services, setServices] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -89,6 +91,10 @@ export default function CitizenDetails() {
         try {
             const data = await citizenService.getById(citizenId);
             setCitizen(data);
+
+            // Fetch certificates for this citizen
+            const servicesData = await serviceService.getAll({ applicantId: citizenId });
+            setServices(servicesData);
         } catch (err) {
             console.error("Failed to fetch citizen details", err);
             setError("Failed to load citizen details.");
@@ -289,6 +295,54 @@ export default function CitizenDetails() {
                             ) : (
                                 <p className="text-sm text-red-500 font-medium">No Birth Certificate Uploaded.</p>
                             )}
+                        </div>
+                    </section>
+
+                    {/* Section 8: Service Applications / Certificates */}
+                    <section className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            8. Certificates & Applications
+                        </h3>
+                        <Separator />
+                        <div className="border rounded-xl overflow-hidden shadow-sm bg-card">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-muted/50 border-b">
+                                        <tr>
+                                            <th className="p-4 font-semibold text-muted-foreground w-1/3">Service Name</th>
+                                            <th className="p-4 font-semibold text-muted-foreground">Status</th>
+                                            <th className="p-4 font-semibold text-muted-foreground text-right">Applied Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {services && services.length > 0 ? (
+                                            services.map((service, idx) => (
+                                                <tr key={idx} className="hover:bg-muted/30 transition-colors">
+                                                    <td className="p-4 font-medium">{service.serviceName}</td>
+                                                    <td className="p-4">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${service.status === 'Approved' ? 'bg-green-50 text-green-700 ring-green-600/20' :
+                                                                service.status === 'Issued' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                                                    service.status === 'Rejected' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+                                                                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20'
+                                                            }`}>
+                                                            {service.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-muted-foreground text-right">
+                                                        {new Date(service.createdAt).toLocaleDateString()}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={3} className="p-8 text-center text-muted-foreground">
+                                                    No certificates applied yet.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
 

@@ -19,7 +19,7 @@ exports.getAvailableCitizens = async (req, res) => {
         const citizenQuery = isAdmin ? {} : { villageOfficeId: villageId };
         // 1. Get all citizens in this village (or all for admin)
         const allCitizens = await Citizen.find(citizenQuery)
-            .select('name age gender uniqueId dob address permanentAddress');
+            .select('name age gender uniqueId dob address permanentAddress rationCardNumber');
 
         const familyQuery = isAdmin ? { status: 'Active' } : { villageId: villageId, status: 'Active' };
         // 2. Get all citizens ALREADY in an active family in this village

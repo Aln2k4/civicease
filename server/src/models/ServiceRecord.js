@@ -11,9 +11,24 @@ const serviceRecordSchema = new mongoose.Schema({
     officialId: { type: mongoose.Schema.Types.ObjectId, ref: 'Official' },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected'],
-        default: 'Pending'
+        enum: [
+            "Draft",
+            "Validated",
+            "Under Review",
+            "Approved",
+            "Rejected",
+            "Issued"
+        ],
+        default: "Draft"
     },
+    statusHistory: [{
+        status: String,
+        timestamp: { type: Date, default: Date.now },
+        officerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Official' },
+        note: String
+    }],
+    rejectionReason: { type: String },
+    approvingOfficer: { type: mongoose.Schema.Types.ObjectId, ref: 'Official' },
     issueDate: { type: Date },
     remarks: { type: String },
     documents: [{ type: String }], // URLs to documents

@@ -104,7 +104,7 @@ export default function ApplyCertificate() {
                 serviceName: formData.serviceName,
                 applicant: validationResult?.citizenId,
                 remarks: formData.purpose,
-                status: validationResult?.manualVerificationRequired ? 'Pending' : 'Pending', // Everything starts as pending for Officer approval
+                status: validationResult?.manualVerificationRequired ? 'Draft' : 'Validated', // Matches the new RBAC lifecycle statuses
                 verificationDetails: {
                     checklist: validationResult?.verificationChecklist,
                     manualRequired: validationResult?.manualVerificationRequired,
