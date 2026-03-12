@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import familyService from "@/services/familyService";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowLeft } from "lucide-react";
 
 interface Citizen {
     _id: string;
@@ -225,11 +225,16 @@ export default function AddFamily() {
     return (
         <main className="flex flex-col items-center w-full mt-8 pb-10">
             <Card className="w-full max-w-3xl">
-                <CardHeader className="bg-slate-50 border-b">
-                    <CardTitle className="text-2xl text-primary">Create New Family</CardTitle>
-                    <CardDescription>
-                        Create a family group for citizens in <strong>{jurisdiction.villageName}</strong>.
-                    </CardDescription>
+                <CardHeader className="bg-slate-50 border-b flex flex-row items-center gap-4 space-y-0">
+                    <Button variant="ghost" size="icon" type="button" onClick={() => navigate(-1)} className="rounded-full shrink-0 -ml-2">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <CardTitle className="text-2xl text-primary">Create New Family</CardTitle>
+                        <CardDescription>
+                            Create a family group for citizens in <strong>{jurisdiction.villageName}</strong>.
+                        </CardDescription>
+                    </div>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="grid gap-6 pt-6">
@@ -277,7 +282,7 @@ export default function AddFamily() {
                             <div className="flex justify-between items-center">
                                 <Label htmlFor="address">Family Address <span className="text-red-500">*</span></Label>
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="autoAddress" onCheckedChange={handleAddressAutoPopulate} disabled={!headId} />
+                                    <Checkbox id="autoAddress" onChange={(e: any) => handleAddressAutoPopulate(e.target.checked)} disabled={!headId} />
                                     <Label htmlFor="autoAddress" className="font-normal text-xs cursor-pointer">Use Head's Address</Label>
                                 </div>
                             </div>

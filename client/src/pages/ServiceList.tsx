@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import serviceService from '../services/serviceService';
 import citizenService from '../services/citizenService';
 import { useAuth } from '@/context/AuthContext';
@@ -44,6 +44,14 @@ interface ServiceRecord {
     };
     officialId: { name: string };
     createdAt: string;
+    proofUploaded?: boolean;
+    documentURL?: string;
+    documentType?: string;
+    appliedDate?: string;
+    verificationDate?: string;
+    approvalDate?: string;
+    issuedDate?: string;
+    statusHistory?: Array<{ status: string, timestamp: string, note?: string }>;
 }
 
 interface ServiceItem {
@@ -59,40 +67,111 @@ interface Category {
     description: string;
 }
 
+const categoriesData: Category[] = [
+    {
+        title: "Socio Economic Certificates",
+        icon: Users,
+        description: "Caste, Income, Minority status and related documents",
+        items: [
+            { label: "Caste Certificate", icon: Users },
+            { label: "Community Certificate", icon: Users2 },
+            { label: "Income Certificate", icon: Coins },
+            { label: "Minority Certificate", icon: UserCheck },
+            { label: "Non-Creamy Layer Certificate", icon: Briefcase },
+            { label: "Inter-Caste Marriage Certificate", icon: Heart },
+        ],
+        color: "text-blue-600"
+    },
+    {
+        title: "Land Related Certificates",
+        icon: MapPin,
+        description: "Possession, Valuation, and Location certificates",
+        items: [
+            { label: "Land Certificate", icon: MapPin },
+            { label: "Possession Certificate", icon: MapPin },
+            { label: "Possession & Non-attachment", icon: MapPin },
+            { label: "Valuation Certificate", icon: Landmark },
+        ],
+        color: "text-emerald-600"
+    },
+    {
+        title: "Family & Relations",
+        icon: Heart,
+        description: "Family membership, relationship and dependency proofs",
+        items: [
+            { label: "Dependency Certificate", icon: User },
+            { label: "Family Membership", icon: Users },
+            { label: "Legal Heir Certificate", icon: Gavel },
+            { label: "Non-remarriage Certificate", icon: Heart },
+            { label: "Relationship Certificate", icon: Users },
+            { label: "Widow-Widower Certificate", icon: User },
+        ],
+        color: "text-rose-600"
+    },
+    {
+        title: "Residence & Nativity",
+        icon: Home,
+        description: "Proof of residence and place of birth",
+        items: [
+            { label: "Nativity Certificate", icon: Home },
+            { label: "Domicile Certificate", icon: Home },
+        ],
+        color: "text-amber-600"
+    },
+    {
+        title: "Identity Related",
+        icon: ShieldCheck,
+        description: "Personal identification documents",
+        items: [
+            { label: "Identification Certificate", icon: ShieldCheck },
+            { label: "One and Same Certificate", icon: ShieldCheck },
+        ],
+        color: "text-indigo-600"
+    },
+    {
+        title: "Other Services",
+        icon: FileText,
+        description: "Destitute, Solvency and other miscellaneous services",
+        items: [
+            { label: "Destitute Certificate", icon: FileText },
+            { label: "Solvency Certificate", icon: Coins },
+            { label: "Conversion Certificate", icon: RefreshCw },
+        ],
+        color: "text-slate-600"
+    }
+];
+
 const ServiceList = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const isPendingQueue = searchParams.get('view') === 'pending';
     const [services, setServices] = useState<ServiceRecord[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-    const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
+    
+    // Initialize state from location if returning from profile
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(() => {
+        if (location.state?.returnToServices && location.state?.selectedCategoryTitle) {
+            return categoriesData.find(c => c.title === location.state.selectedCategoryTitle) || null;
+        }
+        return null;
+    });
+    const [selectedServiceName, setSelectedServiceName] = useState<string | null>(location.state?.returnToServices ? location.state.selectedServiceName : null);
+    const [selectedCitizen, setSelectedCitizen] = useState<any | null>(location.state?.returnToServices ? location.state.selectedCitizen : null);
+    const [statusFilter, setStatusFilter] = useState(location.state?.returnToServices && location.state.statusFilter ? location.state.statusFilter : "All");
 
     // Citizen Search State
     const [citizenSearch, setCitizenSearch] = useState("");
     const [citizenResults, setCitizenResults] = useState<any[]>([]);
     const [showCitizenResults, setShowCitizenResults] = useState(false);
-    const [selectedCitizen, setSelectedCitizen] = useState<any | null>(null);
-
-    // Filters
-    const [statusFilter, setStatusFilter] = useState("All");
 
     // Details Modal State
-    const [selectedServiceDetails, setSelectedServiceDetails] = useState<ServiceRecord | null>(null);
-    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedServiceDetails, setSelectedServiceDetails] = useState<ServiceRecord | null>(location.state?.returnToServices ? location.state.selectedServiceDetails : null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(location.state?.returnToServices ? location.state.isDetailsModalOpen : false);
     const [rejectionReason, setRejectionReason] = useState("");
     const [isProcessLoading, setIsProcessLoading] = useState(false);
 
-    // Reset state when user changes (e.g. logout/login)
-    useEffect(() => {
-        setServices([]);
-        setSelectedCategory(null);
-        setSelectedServiceName(null);
-        setSelectedCitizen(null);
-        setCitizenSearch("");
-        setCitizenResults([]);
-        setShowCitizenResults(false);
-    }, [user]);
+    // Removed state reset on [user] change as it destroys location.state restoration on first mount
 
     // Fetch services whenever filters or selected service changes
     useEffect(() => {
@@ -133,15 +212,9 @@ const ServiceList = () => {
             if (statusFilter !== "All") {
                 params.status = statusFilter;
             } else if (isPendingQueue) {
-                // Determine what 'pending' means based on the user's role 
-                // Alternatively, just fetch all that are NOT Approved/Rejected/Issued
-                params.status = ['Draft', 'Validated', 'Under Review']; // Example: let the backend handle the array or we filter frontend
-                // Since our backend takes a single status string normally, if it supports in, we can send it.
-                // For safety, if backend expects a single string or requires modifications, 
-                // we'll just omit status from params and filter on the frontend for pending items.
-                // Wait, to keep it simple, we just don't pass status here, but let the user select.
-                // Setting default filter based on role is best.
-                // To avoid breaking existing backend, we will NOT send a hardcoded array unless backend supports it.
+                // Fetch all and filter on frontend for simplicity if backend doesn't support array easily, 
+                // OR since our backend usually uses direct match, we will just fetch all and filter out Issued/Approved/Rejected in frontend
+                // Actually, let's just not pass status to backend and filter the results after fetch
             }
 
             // If a citizen is selected, filter by their ID
@@ -161,7 +234,13 @@ const ServiceList = () => {
 
             // Only fetch if we have a context (Service Name selected OR Citizen selected OR Pending Queue)
             if (selectedServiceName || selectedCitizen || isPendingQueue) {
-                const data = await serviceService.getAll(params);
+                let data = await serviceService.getAll(params);
+
+                if (isPendingQueue && statusFilter === "All") {
+                    // Filter out end-state statuses to show only pending
+                    data = data.filter((s: ServiceRecord) => !['Approved', 'Rejected', 'Issued'].includes(s.status));
+                }
+
                 setServices(data);
             }
 
@@ -202,7 +281,27 @@ const ServiceList = () => {
                 toast.success("Certificate Issued successfully");
             }
 
-            setIsDetailsModalOpen(false);
+            // Update local modal state to reflect the new status immediately without closing
+            let newStatus = '';
+            if (action === 'verify') newStatus = 'Under Review';
+            if (action === 'approve') newStatus = 'Approved';
+            if (action === 'reject') newStatus = 'Rejected';
+            if (action === 'issue') newStatus = 'Issued';
+
+            if (selectedServiceDetails && selectedServiceDetails._id === id) {
+                setSelectedServiceDetails({
+                    ...selectedServiceDetails,
+                    status: newStatus
+                });
+            }
+
+            // Also update the items in the services table so inline buttons update instantly
+            setServices((prevServices) =>
+                prevServices.map(subService =>
+                    subService._id === id ? { ...subService, status: newStatus } : subService
+                )
+            );
+
             setRejectionReason("");
             fetchServices();
         } catch (error: any) {
@@ -213,79 +312,7 @@ const ServiceList = () => {
         }
     };
 
-    const categories: Category[] = [
-        {
-            title: "Socio Economic Certificates",
-            icon: Users,
-            description: "Caste, Income, Minority status and related documents",
-            items: [
-                { label: "Caste Certificate", icon: Users },
-                { label: "Community Certificate", icon: Users2 },
-                { label: "Income Certificate", icon: Coins },
-                { label: "Minority Certificate", icon: UserCheck },
-                { label: "Non-Creamy Layer Certificate", icon: Briefcase },
-                { label: "Inter-Caste Marriage Certificate", icon: Heart },
-            ],
-            color: "text-blue-600"
-        },
-        {
-            title: "Land Related Certificates",
-            icon: MapPin,
-            description: "Possession, Valuation, and Location certificates",
-            items: [
-                { label: "Land Certificate", icon: MapPin },
-                { label: "Possession Certificate", icon: MapPin },
-                { label: "Possession & Non-attachment", icon: MapPin },
-                { label: "Valuation Certificate", icon: Landmark },
-            ],
-            color: "text-emerald-600"
-        },
-        {
-            title: "Family & Relations",
-            icon: Heart,
-            description: "Family membership, relationship and dependency proofs",
-            items: [
-                { label: "Dependency Certificate", icon: User },
-                { label: "Family Membership", icon: Users },
-                { label: "Legal Heir Certificate", icon: Gavel },
-                { label: "Non-remarriage Certificate", icon: Heart },
-                { label: "Relationship Certificate", icon: Users },
-                { label: "Widow-Widower Certificate", icon: User },
-            ],
-            color: "text-rose-600"
-        },
-        {
-            title: "Residence & Nativity",
-            icon: Home,
-            description: "Proof of residence and place of birth",
-            items: [
-                { label: "Nativity Certificate", icon: Home },
-                { label: "Domicile Certificate", icon: Home },
-            ],
-            color: "text-amber-600"
-        },
-        {
-            title: "Identity Related",
-            icon: ShieldCheck,
-            description: "Personal identification documents",
-            items: [
-                { label: "Identification Certificate", icon: ShieldCheck },
-                { label: "One and Same Certificate", icon: ShieldCheck },
-            ],
-            color: "text-indigo-600"
-        },
-        {
-            title: "Other Services",
-            icon: FileText,
-            description: "Destitute, Solvency and other miscellaneous services",
-            items: [
-                { label: "Destitute Certificate", icon: FileText },
-                { label: "Solvency Certificate", icon: Coins },
-                { label: "Conversion Certificate", icon: RefreshCw },
-            ],
-            color: "text-slate-600"
-        }
-    ];
+    const categories = categoriesData;
 
     const handleServiceClick = (serviceName: string) => {
         setSelectedServiceName(serviceName);
@@ -407,7 +434,8 @@ const ServiceList = () => {
                                 <SelectContent>
                                     <SelectItem value="All">All Status</SelectItem>
                                     <SelectItem value="Draft">Draft</SelectItem>
-                                    <SelectItem value="Validated">Validated</SelectItem>
+                                    <SelectItem value="Applied">Applied</SelectItem>
+                                    <SelectItem value="Verified">Verified</SelectItem>
                                     <SelectItem value="Under Review">Under Review</SelectItem>
                                     <SelectItem value="Approved">Approved</SelectItem>
                                     <SelectItem value="Rejected">Rejected</SelectItem>
@@ -472,17 +500,61 @@ const ServiceList = () => {
                                                         {new Date(service.createdAt).toLocaleDateString()}
                                                     </td>
                                                     <td className="p-4 text-right">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setSelectedServiceDetails(service);
-                                                                setIsDetailsModalOpen(true);
-                                                                setRejectionReason("");
-                                                            }}
-                                                        >
-                                                            View Details
-                                                        </Button>
+                                                        <div className="flex justify-end items-center gap-2">
+                                                            {/* Inline Quick Actions based on Role & Status */}
+                                                            {(user?.role === 'Clerk' || user?.role === 'Admin') && service.status === 'Applied' && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                                    onClick={() => handleAction('verify', service._id)}
+                                                                    disabled={isProcessLoading}
+                                                                >
+                                                                    Verify
+                                                                </Button>
+                                                            )}
+
+                                                            {(user?.role === 'Revenue Officer' || user?.role === 'Admin') && service.status === 'Under Review' && (
+                                                                <>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="text-green-600 border-green-200 hover:bg-green-50"
+                                                                        onClick={() => handleAction('approve', service._id)}
+                                                                        disabled={isProcessLoading}
+                                                                    >
+                                                                        Approve
+                                                                    </Button>
+                                                                    {/* Reject usually requires a reason, so better to do it in modal or prompt, 
+                                                                        but we can leave it to the modal for safety, or add a quick prompt.
+                                                                        Leaving Reject for the Details view to mandate the reason. */}
+                                                                </>
+                                                            )}
+
+                                                            {(user?.role === 'Revenue Officer' || user?.role === 'Admin') && service.status === 'Approved' && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                                                    onClick={() => handleAction('issue', service._id)}
+                                                                    disabled={isProcessLoading}
+                                                                >
+                                                                    Issue
+                                                                </Button>
+                                                            )}
+
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedServiceDetails(service);
+                                                                    setIsDetailsModalOpen(true);
+                                                                    setRejectionReason("");
+                                                                }}
+                                                            >
+                                                                View Details
+                                                            </Button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -587,8 +659,8 @@ const ServiceList = () => {
                                     <h4 className="text-sm font-semibold mb-3">Application Progress</h4>
                                     <div className="flex items-center justify-between relative">
                                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted -z-10 rounded-full"></div>
-                                        {['Draft', 'Validated', 'Under Review', 'Approved', 'Issued'].map((step, idx) => {
-                                            const steps = ['Draft', 'Validated', 'Under Review', 'Approved', 'Issued'];
+                                        {['Applied', 'Verified', 'Under Review', 'Approved', 'Issued'].map((step, idx) => {
+                                            const steps = ['Applied', 'Verified', 'Under Review', 'Approved', 'Issued'];
                                             const currentIdx = steps.indexOf(selectedServiceDetails.status);
                                             const isRejected = selectedServiceDetails.status === 'Rejected';
                                             const isPast = !isRejected && currentIdx >= idx;
@@ -597,10 +669,34 @@ const ServiceList = () => {
                                             let dotColor = isPast ? 'bg-primary' : 'bg-muted border-2 border-border';
                                             if (isRejected && idx <= steps.indexOf('Under Review')) dotColor = 'bg-red-500 border-red-500';
 
+                                            // Determine date to show
+                                            let stepDate = null;
+                                            if (isPast || isCurrent) {
+                                                if (step === 'Applied' && selectedServiceDetails.appliedDate) stepDate = new Date(selectedServiceDetails.appliedDate);
+                                                if (step === 'Applied' && !selectedServiceDetails.appliedDate) stepDate = new Date(selectedServiceDetails.createdAt); // Fallback
+                                                if (step === 'Verified' && selectedServiceDetails.verificationDate) stepDate = new Date(selectedServiceDetails.verificationDate);
+                                                if (step === 'Under Review' && selectedServiceDetails.verificationDate) stepDate = new Date(selectedServiceDetails.verificationDate); // Often same block
+                                                if (step === 'Approved' && selectedServiceDetails.approvalDate) stepDate = new Date(selectedServiceDetails.approvalDate);
+                                                if (step === 'Issued' && selectedServiceDetails.issuedDate) stepDate = new Date(selectedServiceDetails.issuedDate);
+                                                
+                                                // Fallback to searching statusHistory if dates aren't directly available
+                                                if (!stepDate && selectedServiceDetails.statusHistory) {
+                                                    const hist = selectedServiceDetails.statusHistory.find((h: any) => h.status === step);
+                                                    if (hist && hist.timestamp) stepDate = new Date(hist.timestamp);
+                                                }
+                                            }
+
                                             return (
-                                                <div key={step} className="flex flex-col items-center gap-2 bg-background px-2">
+                                                <div key={step} className="flex flex-col items-center gap-2 bg-background px-2 transform translate-y-4">
                                                     <div className={`w-4 h-4 rounded-full ${dotColor} ${isCurrent && !isRejected ? 'ring-4 ring-primary/20' : ''}`} />
-                                                    <span className={`text-[10px] font-medium ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>{step}</span>
+                                                    <div className="flex flex-col items-center text-center">
+                                                        <span className={`text-[10px] sm:text-xs font-medium ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`}>{step}</span>
+                                                        {stepDate && (
+                                                            <span className="text-[9px] sm:text-[10px] text-muted-foreground/80 mt-0.5">
+                                                                {stepDate.toLocaleDateString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -612,10 +708,32 @@ const ServiceList = () => {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg">
-                                    <div>
+                                <div className="grid grid-cols-2 gap-4 text-sm bg-muted/30 p-4 rounded-lg mt-6">
+                                    <div className="flex flex-col">
                                         <span className="text-muted-foreground block text-xs uppercase mb-1">Applicant</span>
-                                        <span className="font-medium">{selectedServiceDetails.applicant?.name}</span>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium text-base">{selectedServiceDetails.applicant?.name}</span>
+                                            {selectedServiceDetails.applicant?._id && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    className="h-7 text-primary hover:text-primary hover:bg-primary/10 px-2"
+                                                    onClick={() => navigate(`/citizens/${selectedServiceDetails.applicant._id}`, {
+                                                        state: {
+                                                            returnToServices: true,
+                                                            selectedCategoryTitle: selectedCategory?.title,
+                                                            selectedServiceName,
+                                                            selectedCitizen,
+                                                            statusFilter,
+                                                            selectedServiceDetails,
+                                                            isDetailsModalOpen: true
+                                                        }
+                                                    })}
+                                                >
+                                                    View Profile
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground block text-xs uppercase mb-1">Status</span>
@@ -631,8 +749,23 @@ const ServiceList = () => {
                                     </div>
                                 </div>
 
+                                {/* Attached Proofs Section */}
+                                {selectedServiceDetails.proofUploaded && selectedServiceDetails.documentURL && (
+                                    <div className="mt-2 p-4 bg-muted/20 border rounded-lg">
+                                        <h5 className="text-sm font-semibold mb-2">Attached Proof Document</h5>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm">{selectedServiceDetails.documentType || 'Document'}</span>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <a href={selectedServiceDetails.documentURL} target="_blank" rel="noopener noreferrer">
+                                                    View Document
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Officer Actions */}
-                                {(user?.role === 'Clerk' || user?.role === 'Admin') && selectedServiceDetails.status === 'Validated' && (
+                                {(user?.role === 'Clerk' || user?.role === 'Admin') && selectedServiceDetails.status === 'Applied' && (
                                     <div className="mt-4">
                                         <Button
                                             className="w-full"

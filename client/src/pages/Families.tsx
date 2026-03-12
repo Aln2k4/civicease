@@ -25,13 +25,24 @@ import familyService from "@/services/familyService";
 export default function Families() {
     const { user } = useAuth();
     const [families, setFamilies] = useState<any[]>([]);
+    const [allFamilies, setAllFamilies] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedWard, setSelectedWard] = useState<string>("all");
 
     useEffect(() => {
+        if (user) {
+            familyService.getAll().then(data => setAllFamilies(data)).catch(console.error);
+        }
+    }, [user]);
+
+    useEffect(() => {
         const fetchFamilies = async () => {
             try {
-                const data = await familyService.getAll();
+                const params: any = {};
+                if (searchTerm.trim()) params.search = searchTerm;
+                if (selectedWard !== "all") params.wardNumber = selectedWard;
+
+                const data = await familyService.getAll(params);
                 setFamilies(data);
             } catch (error) {
                 console.error("Failed to fetch families", error);
@@ -40,16 +51,12 @@ export default function Families() {
         if (user) {
             fetchFamilies();
         }
-    }, [user]);
+    }, [user, searchTerm, selectedWard]);
 
-    const uniqueWards = Array.from(new Set(families.filter(f => f.wardNumber).map(f => f.wardNumber))).sort((a: any, b: any) => a - b);
+    const uniqueWards = Array.from(new Set(allFamilies.filter(f => f.wardNumber).map(f => f.wardNumber))).sort((a: any, b: any) => a - b);
 
-    const filteredFamilies = families.filter(
-        (family) =>
-            (selectedWard === "all" || family.wardNumber?.toString() === selectedWard) &&
-            ((family.headOfFamily?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (family.familyName || "").toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // Filtering handled by backend, but keep local map filter fallback just in case or just use backend
+    const filteredFamilies = families;
 
     return (
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">

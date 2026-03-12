@@ -142,7 +142,7 @@ const validateApplicant = async (req, res) => {
         const existingService = await ServiceRecord.findOne({
             applicant: citizen._id,
             serviceName: serviceName,
-            status: { $in: ['Pending', 'Approved', 'Issued'] }
+            status: { $in: ['Applied', 'Verified', 'Under Review', 'Approved'] }
         });
 
         if (existingService) {
@@ -195,10 +195,10 @@ const createService = async (req, res) => {
             officialId: req.user._id,
             villageId: req.villageId, // Save the village context
             remarks,
-            status: status || 'Draft',
+            status: status || 'Applied',
             verificationDetails,
             statusHistory: [{
-                status: status || 'Draft',
+                status: status || 'Applied',
                 officerId: req.user._id,
                 note: 'Application submitted'
             }]
@@ -218,14 +218,14 @@ const updateVerificationStatus = async (req, res) => {
         const service = await ServiceRecord.findById(req.params.id);
         if (!service) return res.status(404).json({ message: "Service record not found." });
 
-        if (service.status !== 'Validated' && service.status !== 'Draft') {
-            // Depending on frontend flow Draft -> Validated typically happens during create, but let's allow both
-            return res.status(400).json({ message: `Can only verify applications that are 'Validated', but this is ${service.status}.` });
+        if (service.status !== 'Applied') {
+            return res.status(400).json({ message: `Can only verify applications that are 'Applied', but this is ${service.status}.` });
         }
 
-        service.status = 'Under Review';
+        service.status = 'Verified';
+        service.verificationDate = new Date();
         service.statusHistory.push({
-            status: 'Under Review',
+            status: 'Verified',
             officerId: req.user._id,
             note: req.body.note || 'Verification completed by Clerk'
         });
@@ -245,11 +245,12 @@ const approveCertificate = async (req, res) => {
         const service = await ServiceRecord.findById(req.params.id);
         if (!service) return res.status(404).json({ message: "Service record not found." });
 
-        if (service.status !== 'Under Review') {
-            return res.status(400).json({ message: "Can only approve applications that are 'Under Review'." });
+        if (service.status !== 'Verified' && service.status !== 'Under Review') {
+            return res.status(400).json({ message: "Can only approve applications that are 'Verified' or 'Under Review'." });
         }
 
         service.status = 'Approved';
+        service.approvalDate = new Date();
         service.approvingOfficer = req.user._id;
         service.statusHistory.push({
             status: 'Approved',
@@ -275,7 +276,7 @@ const rejectCertificate = async (req, res) => {
         const service = await ServiceRecord.findById(req.params.id);
         if (!service) return res.status(404).json({ message: "Service record not found." });
 
-        if (service.status !== 'Under Review' && service.status !== 'Validated') {
+        if (service.status !== 'Applied' && service.status !== 'Verified' && service.status !== 'Under Review') {
             return res.status(400).json({ message: "Invalid status for rejection." });
         }
 
@@ -307,7 +308,8 @@ const issueCertificate = async (req, res) => {
         }
 
         service.status = 'Issued';
-        service.issueDate = new Date();
+        service.issuedDate = new Date();
+        service.issueDate = new Date(); // keeping for backward compatibility if any
         service.statusHistory.push({
             status: 'Issued',
             officerId: req.user._id,
@@ -321,5 +323,35 @@ const issueCertificate = async (req, res) => {
     }
 };
 
-module.exports = { getServices, createService, validateApplicant, updateVerificationStatus, approveCertificate, rejectCertificate, issueCertificate };
+// @desc    Upload proof document for certificate
+// @route   POST /api/services/:id/upload-proof
+// @access  Private
+const uploadProof = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded." });
+        }
+
+        const service = await ServiceRecord.findById(req.params.id);
+        if (!service) return res.status(404).json({ message: "Service record not found." });
+
+        // Update document fields
+        service.proofUploaded = true;
+        service.documentType = req.body.documentType || 'General Proof';
+        // Convert local path to web-accessible URL assuming server routes /uploads to the directory
+        service.documentURL = `/uploads/certificates/${req.file.filename}`;
+
+        // Push the new document to the array just in case as well
+        if (!service.documents) service.documents = [];
+        service.documents.push(service.documentURL);
+
+        await service.save();
+        res.json({ message: "Proof uploaded successfully", service });
+    } catch (error) {
+        console.error("Upload proof error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getServices, createService, validateApplicant, updateVerificationStatus, approveCertificate, rejectCertificate, issueCertificate, uploadProof };
 

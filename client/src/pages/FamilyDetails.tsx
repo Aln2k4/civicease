@@ -26,7 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Trash2, Network } from "lucide-react";
+import { Plus, Search, Trash2, Network, ArrowLeft } from "lucide-react";
 import familyService from "@/services/familyService";
 import FamilyTreeVisualizer from "@/components/FamilyTreeVisualizer";
 
@@ -181,12 +181,17 @@ export default function FamilyDetails() {
     return (
         <main className="flex flex-col items-center p-4 sm:px-6 sm:py-0 mt-8">
             <Card className="w-full max-w-4xl">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="text-2xl">{family.familyName}</CardTitle>
-                        <CardDescription>Ration Card: {family.rationCardNumber}</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" type="button" onClick={() => navigate(-1)} className="rounded-full shrink-0 -ml-2">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                        <div>
+                            <CardTitle className="text-2xl">{family.familyName}</CardTitle>
+                            <CardDescription>Ration Card: {family.rationCardNumber}</CardDescription>
+                        </div>
                     </div>
-                    <Button onClick={() => navigate('/families')}>Back to List</Button>
+                    {/* Existing button below could be removed, but kept for redundancy if preferred */}
                 </CardHeader>
                 <CardContent className="grid gap-6">
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -287,10 +292,14 @@ export default function FamilyDetails() {
                             {family.members && family.members.length > 0 ? (
                                 <ul className="space-y-4">
                                     {family.members.map((member: any) => (
-                                        <li key={member._id} className="flex justify-between items-start bg-background p-4 rounded shadow-sm">
+                                        <li 
+                                            key={member._id} 
+                                            className="flex justify-between items-start bg-background p-4 rounded shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-transparent hover:border-slate-200 group"
+                                            onClick={() => navigate(`/citizens/${member._id}`)}
+                                        >
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-lg">{member.name}</span>
+                                                    <span className="font-medium text-lg group-hover:text-primary transition-colors">{member.name}</span>
                                                     <span className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">{member.relationshipToHead}</span>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-2 text-sm text-muted-foreground">
@@ -301,7 +310,15 @@ export default function FamilyDetails() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openRemoveDialog(member)}>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Prevent row click when clicking delete
+                                                        openRemoveDialog(member);
+                                                    }}
+                                                >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>

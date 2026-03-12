@@ -28,6 +28,7 @@ const serviceRoutes = require('./routes/service.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const certificateRoutes = require('./routes/certificate.routes');
 const uploadRoutes = require('./routes/upload.routes');
+const searchRoutes = require('./routes/search.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/citizens', citizenRoutes);
@@ -36,5 +37,6 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/search', searchRoutes);
 
 module.exports = app;

@@ -12,6 +12,7 @@ import CitizenDetails from "./pages/CitizenDetails";
 import ServiceList from "./pages/ServiceList";
 import ApplyCertificate from "./pages/ApplyCertificate";
 import Officials from "./pages/Officials";
+import FamilyCitizenRedirect from "./pages/FamilyCitizenRedirect";
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/citizens" element={<CitizenList />} />
           <Route path="/citizens/add" element={<AddCitizen />} />
           <Route path="/citizens/:id" element={<CitizenDetails />} />
+          <Route path="/citizens/:id/family" element={<FamilyCitizenRedirect />} />
           <Route path="/families" element={<Families />} />
           <Route path="/families/add" element={<AddFamily />} />
           <Route path="/families/:id" element={<FamilyDetails />} />

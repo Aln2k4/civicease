@@ -28,6 +28,7 @@ export default function ApplyCertificate() {
     const [stage, setStage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+    const [proofFile, setProofFile] = useState<File | null>(null);
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -112,7 +113,18 @@ export default function ApplyCertificate() {
                 }
             };
 
-            await api.post('/services', payload);
+            const res = await api.post('/services', payload);
+
+            // Upload proof if provided
+            if (proofFile && res.data._id) {
+                const formData = new FormData();
+                formData.append('file', proofFile);
+                formData.append('documentType', 'Application Proof');
+                await api.post(`/services/${res.data._id}/upload-proof`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
+
             toast.success("Certificate application submitted successfully!");
             navigate('/services');
         } catch (error: any) {
@@ -125,11 +137,16 @@ export default function ApplyCertificate() {
 
     return (
         <div className="container max-w-4xl mx-auto py-10 px-4">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-primary">Apply for Certificate</h1>
-                <p className="text-muted-foreground mt-2">
-                    Multi-stage validation and approval workflow integrated with Citizen database.
-                </p>
+            <div className="mb-8 flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full shrink-0 -ml-2 mt-1">
+                    <ArrowLeft className="h-6 w-6" />
+                </Button>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-primary">Apply for Certificate</h1>
+                    <p className="text-muted-foreground mt-2">
+                        Multi-stage validation and approval workflow integrated with Citizen database.
+                    </p>
+                </div>
             </div>
 
             {/* Stepper */}
@@ -421,6 +438,21 @@ export default function ApplyCertificate() {
                                     : "All critical parameters verify against the central database. Application is ready for rapid approval."
                                 }
                             </p>
+                        </div>
+
+                        {/* Document Upload Section */}
+                        <div className="bg-muted/30 p-4 rounded-lg border border-primary/10 mt-4">
+                            <h4 className="font-semibold text-sm mb-2">Upload Supporting Documents (Optional)</h4>
+                            <div className="flex items-center gap-4">
+                                <Input
+                                    type="file"
+                                    accept=".pdf,.png,.jpg,.jpeg"
+                                    onChange={(e) => setProofFile(e.target.files ? e.target.files[0] : null)}
+                                    className="cursor-pointer"
+                                />
+                                {proofFile && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">Max limit 5MB. Accepted formats: PDF, JPG, PNG.</p>
                         </div>
 
                     </CardContent>

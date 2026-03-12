@@ -39,68 +39,78 @@ const CitizenList = () => {
     const [filterDistrict, setFilterDistrict] = useState("all");
     const [filterVillage, setFilterVillage] = useState("all");
 
+    const [allCitizens, setAllCitizens] = useState<Citizen[]>([]);
+
     const isAdmin = user?.role === 'Admin' || user?.role === 'admin';
 
+    // Fetch once for dropdown options
+    useEffect(() => {
+        if (user) {
+            citizenService.getAll().then(data => setAllCitizens(data)).catch(console.error);
+        }
+    }, [user]);
+
+    // Fetch dynamically based on filters
     useEffect(() => {
         if (user) {
             fetchCitizens();
         }
-    }, [user]);
+    }, [user, searchTerm, filterDistrict, filterVillage, filterType, filterValue]);
 
     const fetchCitizens = async () => {
         try {
-            const data = await citizenService.getAll();
+            const params: any = {};
+            if (searchTerm.trim()) params.search = searchTerm;
+            if (isAdmin && filterDistrict !== "all") params.district = filterDistrict;
+            // Note: filterVillage is currently the string name, backend needs villageId for strict filtering, 
+            // but for frontend we map name back to ID if we can, or let frontend do the name filter.
+            // Let's pass ward if selected
+            if (filterType === "ward" && filterValue !== "all") params.ward = filterValue;
+
+            const data = await citizenService.getAll(params);
             setCitizens(data);
         } catch (error) {
             console.error('Failed to fetch citizens', error);
         }
     };
 
-    // Extract unique Wards and Places for filter dropdowns
+    // Extract unique Wards and Places for filter dropdowns from allCitizens
     const uniqueWards = useMemo(() => {
-        const wards = new Set(citizens.map(c => c.ward).filter(Boolean));
+        const wards = new Set(allCitizens.map(c => c.ward).filter(Boolean));
         return Array.from(wards).sort();
-    }, [citizens]);
+    }, [allCitizens]);
 
     const uniquePlaces = useMemo(() => {
-        const places = new Set(citizens.map(c => c.place).filter(Boolean));
+        const places = new Set(allCitizens.map(c => c.place).filter(Boolean));
         return Array.from(places).sort();
-    }, [citizens]);
+    }, [allCitizens]);
 
     const uniqueDistricts = useMemo(() => {
         const districts = new Set(
-            citizens
+            allCitizens
                 .map(c => c.villageOfficeId?.district)
                 .filter(Boolean)
         );
         return Array.from(districts).sort();
-    }, [citizens]);
+    }, [allCitizens]);
 
     const uniqueVillages = useMemo(() => {
         const villages = new Set(
-            citizens
+            allCitizens
                 .filter(c => filterDistrict === "all" || c.villageOfficeId?.district === filterDistrict)
                 .map(c => c.villageOfficeId?.villageName)
                 .filter(Boolean)
         );
         return Array.from(villages).sort();
-    }, [citizens, filterDistrict]);
+    }, [allCitizens, filterDistrict]);
 
     const filteredCitizens = citizens.filter(citizen => {
-        const matchesSearch =
-            citizen.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (citizen.uniqueId && citizen.uniqueId.includes(searchTerm));
-
-        if (!matchesSearch) return false;
-
+        // Backend handles search, district, and ward. 
+        // Frontend still needs to handle 'villageName' and 'place' since we didn't add exact backend params for them yet.
         if (isAdmin) {
-            if (filterDistrict !== "all" && citizen.villageOfficeId?.district !== filterDistrict) return false;
             if (filterVillage !== "all" && citizen.villageOfficeId?.villageName !== filterVillage) return false;
         }
 
-        if (filterType === "ward") {
-            return filterValue === "all" || citizen.ward === filterValue;
-        }
         if (filterType === "place") {
             return filterValue === "all" || citizen.place === filterValue;
         }

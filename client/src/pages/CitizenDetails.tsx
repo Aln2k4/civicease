@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -76,6 +77,7 @@ interface Citizen {
 export default function CitizenDetails() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const [citizen, setCitizen] = useState<Citizen | null>(null);
     const [services, setServices] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -139,14 +141,60 @@ export default function CitizenDetails() {
         return age;
     };
 
+    const CollapsibleSection = ({ title, children }: { title: string, children: React.ReactNode }) => {
+        const [isExpanded, setIsExpanded] = useState(false);
+
+        return (
+            <section className="space-y-4">
+                <div 
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    onKeyDown={(e) => e.key === 'Enter' && setIsExpanded(!isExpanded)}
+                    className="flex items-center justify-between cursor-pointer group outline-none"
+                >
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800 group-hover:text-primary transition-colors">
+                        {title}
+                    </h3>
+                    <div className="bg-slate-100 p-1 rounded-full group-hover:bg-slate-200 transition-colors">
+                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </div>
+                </div>
+                <Separator />
+                {isExpanded && (
+                    <div className="animate-in fade-in duration-300">
+                        {children}
+                    </div>
+                )}
+            </section>
+        );
+    };
+
     return (
         <main className="flex flex-col items-center w-full mt-8 pb-10">
             <Card className="w-full max-w-4xl shadow-md">
                 <CardHeader className="bg-slate-50/50 border-b">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle className="text-2xl text-primary">Citizen Details</CardTitle>
-                            <CardDescription>Full profile information for {citizen.name}</CardDescription>
+                        <div className="flex items-start gap-4">
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                type="button" 
+                                onClick={() => {
+                                    if (location.state?.returnToServices) {
+                                        navigate('/services', { state: location.state });
+                                    } else {
+                                        navigate(-1);
+                                    }
+                                }} 
+                                className="rounded-full mt-0.5 shrink-0 -ml-2"
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+                            <div>
+                                <CardTitle className="text-2xl text-primary">Citizen Details</CardTitle>
+                                <CardDescription>Full profile information for {citizen.name}</CardDescription>
+                            </div>
                         </div>
                         {citizen.headOfFamily && (
                             <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-semibold border border-primary/20">
@@ -216,11 +264,7 @@ export default function CitizenDetails() {
                     </section>
 
                     {/* Section 3: Family & Relationships */}
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                            3. Family Information
-                        </h3>
-                        <Separator />
+                    <CollapsibleSection title="3. Family Information">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <DetailItem label="Father's Name" value={citizen.fatherName} />
                             <DetailItem label="Mother's Name" value={citizen.motherName} />
@@ -228,27 +272,28 @@ export default function CitizenDetails() {
                                 <DetailItem label="Spouse Name" value={citizen.spouseName} />
                             )}
                         </div>
-                    </section>
+                        <div className="mt-6 flex justify-end">
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/citizens/${citizen._id}/family`)}
+                            >
+                                View Family Details
+                            </Button>
+                        </div>
+                    </CollapsibleSection>
 
                     {/* Section 4: Contact Information */}
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                            4. Contact Information
-                        </h3>
-                        <Separator />
+                    <CollapsibleSection title="4. Contact Information">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <DetailItem label="Mobile Number" value={citizen.contactNumber} />
                             <DetailItem label="Alternate Mobile" value={citizen.alternateMobile} />
                             <DetailItem label="Email ID" value={citizen.email} />
                         </div>
-                    </section>
+                    </CollapsibleSection>
 
                     {/* Section 5: IDs and Documents */}
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                            5. Identity Documents
-                        </h3>
-                        <Separator />
+                    <CollapsibleSection title="5. Identity Documents">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <DetailItem label="Aadhaar (Unique ID)" value={citizen.uniqueId} />
                             <DetailItem label="Ration Card" value={citizen.rationCardNumber} />
@@ -256,54 +301,19 @@ export default function CitizenDetails() {
                             <DetailItem label="Driving Licence" value={citizen.drivingLicence} />
                             <DetailItem label="Passport" value={citizen.passportNumber} />
                         </div>
-                    </section>
+                    </CollapsibleSection>
 
                     {/* Section 6: Community & Religion */}
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                            6. Community & Religion
-                        </h3>
-                        <Separator />
+                    <CollapsibleSection title="6. Community & Religion">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <DetailItem label="Religion" value={citizen.religion} />
                             <DetailItem label="Caste" value={citizen.caste} />
                             <DetailItem label="Category" value={citizen.communityCategory} />
                         </div>
-                    </section>
+                    </CollapsibleSection>
 
-                    {/* Section 7: Birth Certificate */}
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                            7. Birth Certificate
-                        </h3>
-                        <Separator />
-                        <div className="bg-slate-50 p-4 border rounded-md">
-                            {citizen.birthCertificate ? (
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium text-slate-600">Uploaded Document:</p>
-                                    <div className="relative w-full max-w-sm overflow-hidden rounded-lg border bg-white shadow-sm">
-                                        {/* Assuming server serves uploads at /uploads base URL */}
-                                        <img
-                                            src={`http://localhost:5000/${citizen.birthCertificate}`}
-                                            alt="Birth Certificate"
-                                            className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                                            onClick={() => window.open(`http://localhost:5000/${citizen.birthCertificate}`, '_blank')}
-                                        />
-                                    </div>
-                                    <p className="text-xs text-muted-foreground pt-1">Click image to view full size.</p>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-red-500 font-medium">No Birth Certificate Uploaded.</p>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Section 8: Service Applications / Certificates */}
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                            8. Certificates & Applications
-                        </h3>
-                        <Separator />
+                    {/* Section 7: Service Applications / Certificates */}
+                    <CollapsibleSection title="7. Certificates & Applications">
                         <div className="border rounded-xl overflow-hidden shadow-sm bg-card">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
@@ -321,9 +331,9 @@ export default function CitizenDetails() {
                                                     <td className="p-4 font-medium">{service.serviceName}</td>
                                                     <td className="p-4">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${service.status === 'Approved' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                                                                service.status === 'Issued' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                                                                    service.status === 'Rejected' ? 'bg-red-50 text-red-700 ring-red-600/20' :
-                                                                        'bg-yellow-50 text-yellow-800 ring-yellow-600/20'
+                                                            service.status === 'Issued' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                                                                service.status === 'Rejected' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+                                                                    'bg-yellow-50 text-yellow-800 ring-yellow-600/20'
                                                             }`}>
                                                             {service.status}
                                                         </span>
@@ -344,7 +354,7 @@ export default function CitizenDetails() {
                                 </table>
                             </div>
                         </div>
-                    </section>
+                    </CollapsibleSection>
 
                 </CardContent>
                 <CardFooter className="flex justify-between border-t p-6 bg-slate-50/50">

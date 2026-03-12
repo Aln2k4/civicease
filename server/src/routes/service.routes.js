@@ -7,9 +7,11 @@ const {
     updateVerificationStatus,
     approveCertificate,
     rejectCertificate,
-    issueCertificate
+    issueCertificate,
+    uploadProof
 } = require('../controllers/service.controller');
 const { protect, authorizeRole } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 router.route('/')
     .get(protect, getServices)
@@ -22,5 +24,8 @@ router.put('/:id/verify', protect, authorizeRole('Clerk', 'Admin'), updateVerifi
 router.put('/:id/approve', protect, authorizeRole('Revenue Officer', 'Admin'), approveCertificate);
 router.put('/:id/reject', protect, authorizeRole('Revenue Officer', 'Admin'), rejectCertificate);
 router.put('/:id/issue', protect, authorizeRole('Revenue Officer', 'Admin'), issueCertificate);
+
+// Document upload
+router.post('/:id/upload-proof', protect, upload.single('file'), uploadProof);
 
 module.exports = router;

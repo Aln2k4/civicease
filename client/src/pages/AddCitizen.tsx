@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -227,11 +228,16 @@ export default function AddCitizen() {
     return (
         <main className="flex flex-col items-center w-full mt-8 pb-10">
             <Card className="w-full max-w-5xl">
-                <CardHeader className="bg-slate-50 border-b">
-                    <CardTitle className="text-2xl text-primary">Add New Citizen</CardTitle>
-                    <CardDescription>
-                        Register a new citizen under <strong>{jurisdiction.villageName}</strong>, {jurisdiction.taluk}, {jurisdiction.district}.
-                    </CardDescription>
+                <CardHeader className="bg-slate-50 border-b flex flex-row items-center gap-4 space-y-0">
+                    <Button variant="ghost" size="icon" type="button" onClick={() => navigate(-1)} className="rounded-full shrink-0 -ml-2">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <CardTitle className="text-2xl text-primary">Add New Citizen</CardTitle>
+                        <CardDescription>
+                            Register a new citizen under <strong>{jurisdiction.villageName}</strong>, {jurisdiction.taluk}, {jurisdiction.district}.
+                        </CardDescription>
+                    </div>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="grid gap-8 pt-6">

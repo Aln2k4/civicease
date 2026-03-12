@@ -11,7 +11,11 @@ router.use(protect);
 router.get('/', familyController.getFamilies);
 router.post('/', familyController.createFamily);
 router.get('/available-citizens', familyController.getAvailableCitizens);
+router.get('/by-citizen/:citizenId', familyController.getFamilyByCitizenId);
 router.get('/:id', familyController.getFamilyById);
+
+// Add Member
+router.post('/:id/members', familyController.addMember);
 
 // Remove Member (Using PUT for FormData support)
 // Remove Member (Using PUT for FormData support)
