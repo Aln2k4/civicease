@@ -11,12 +11,40 @@ const serviceRecordSchema = new mongoose.Schema({
     officialId: { type: mongoose.Schema.Types.ObjectId, ref: 'Official' },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected'],
-        default: 'Pending'
+        enum: [
+            "Draft",
+            "Applied",
+            "Verified",
+            "Under Review",
+            "Approved",
+            "Rejected",
+            "Issued"
+        ],
+        default: "Applied"
     },
-    issueDate: { type: Date },
+    statusHistory: [{
+        status: String,
+        timestamp: { type: Date, default: Date.now },
+        officerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Official' },
+        note: String
+    }],
+    rejectionReason: { type: String },
+    approvingOfficer: { type: mongoose.Schema.Types.ObjectId, ref: 'Official' },
+
+    // Lifecycle Dates
+    appliedDate: { type: Date, default: Date.now },
+    verificationDate: { type: Date },
+    approvalDate: { type: Date },
+    issuedDate: { type: Date },
+
+    // Document Uploads
+    proofUploaded: { type: Boolean, default: false },
+    documentType: { type: String }, // 'Income proof', 'Identity proof', etc.
+    documentURL: { type: String },
+    verifiedStatus: { type: String, enum: ['Pending', 'Verified', 'Rejected'], default: 'Pending' },
+
     remarks: { type: String },
-    documents: [{ type: String }], // URLs to documents
+    documents: [{ type: String }], // Optional: Multiple URLs
     verificationDetails: { type: Object }, // Store the dynamic checklist verification items and statuses
     villageId: { type: mongoose.Schema.Types.ObjectId, ref: 'VillageOffice', required: true }, // Added for Data Isolation
     createdAt: { type: Date, default: Date.now }

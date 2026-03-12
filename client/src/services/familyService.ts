@@ -9,13 +9,18 @@ const getAvailableCitizens = async () => {
     return response.data;
 };
 
-const getAll = async () => {
-    const response = await api.get("/families");
+const getAll = async (params?: any) => {
+    const response = await api.get("/families", { params });
     return response.data;
 };
 
 const getById = async (id: string) => {
     const response = await api.get(`/families/${id}`);
+    return response.data;
+};
+
+const getByCitizenId = async (citizenId: string) => {
+    const response = await api.get(`/families/by-citizen/${citizenId}`);
     return response.data;
 };
 
@@ -56,6 +61,7 @@ const familyService = {
     getAvailableCitizens,
     getAll,
     getById,
+    getByCitizenId,
     addMember,
     removeMember,
     uploadCSV,

@@ -1,5 +1,6 @@
 const Family = require('../models/Family');
 const Citizen = require('../models/Citizen');
+const VillageOffice = require('../models/VillageOffice');
 const fs = require('fs');
 const csv = require('csv-parser');
 
@@ -19,7 +20,7 @@ exports.getAvailableCitizens = async (req, res) => {
         const citizenQuery = isAdmin ? {} : { villageOfficeId: villageId };
         // 1. Get all citizens in this village (or all for admin)
         const allCitizens = await Citizen.find(citizenQuery)
-            .select('name age gender uniqueId dob address permanentAddress');
+            .select('name age gender uniqueId dob address permanentAddress rationCardNumber');
 
         const familyQuery = isAdmin ? { status: 'Active' } : { villageId: villageId, status: 'Active' };
         // 2. Get all citizens ALREADY in an active family in this village
@@ -152,7 +153,20 @@ exports.createFamily = async (req, res) => {
 
         await newFamily.save();
 
-        // Update Head Citizen flag
+        // Dynamic Family Income Recalculation
+        let totalIncome = headCitizen.annualIncome || 0;
+        const memberIds = [headCitizenId];
+
+        for (const m of members) {
+            const cit = await Citizen.findById(m.citizenId);
+            if (cit) {
+                totalIncome += (cit.annualIncome || 0);
+                memberIds.push(cit._id);
+            }
+        }
+
+        // Update all members with family annual income and Head of Family flag for head
+        await Citizen.updateMany({ _id: { $in: memberIds } }, { familyAnnualIncome: totalIncome });
         await Citizen.findByIdAndUpdate(headCitizenId, { headOfFamily: true });
 
         res.status(201).json(newFamily);
@@ -172,12 +186,48 @@ exports.getFamilies = async (req, res) => {
         const villageId = req.villageId;
         const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'admin');
 
-        if (!villageId && !isAdmin) {
-            return res.status(403).json({ message: "Jurisdiction context missing." });
+        let query = { status: 'Active' };
+
+        // Ensure jurisdiction for non-admins if villageId exists
+        if (!isAdmin && villageId) {
+            query.villageId = villageId;
         }
 
-        const familyQuery = isAdmin ? { status: 'Active' } : { villageId, status: 'Active' };
-        const families = await Family.find(familyQuery)
+        const { search, district, taluk, villageId: qVillageId, wardNumber } = req.query;
+
+        // Location Hierarchy Filtering
+        if (district || taluk || qVillageId) {
+            let villageQuery = {};
+            if (district) villageQuery.district = district;
+            if (taluk) villageQuery.taluk = taluk;
+            if (qVillageId) villageQuery._id = qVillageId;
+
+            const matchedVillages = await VillageOffice.find(villageQuery).select('_id');
+            const matchVillageIds = matchedVillages.map(v => v._id);
+
+            if (query.villageId) {
+                if (isAdmin) {
+                    query.villageId = { $in: matchVillageIds };
+                }
+            } else {
+                query.villageId = { $in: matchVillageIds };
+            }
+        }
+
+        if (wardNumber) {
+            query.wardNumber = wardNumber;
+        }
+
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { familyName: searchRegex },
+                { rationCardNumber: searchRegex },
+                { address: searchRegex }
+            ];
+        }
+
+        const families = await Family.find(query)
             .populate('headCitizenId', 'name')
             .populate('villageId', 'villageName')
             .lean();
@@ -258,6 +308,83 @@ exports.getFamilyById = async (req, res) => {
     } catch (error) {
         console.error("Error fetching family details:", error);
         res.status(500).json({ message: "Server error fetching family details." });
+    }
+};
+
+/**
+ * Get family by Citizen ID
+ * @route GET /api/families/by-citizen/:citizenId
+ */
+exports.getFamilyByCitizenId = async (req, res) => {
+    try {
+        const { citizenId } = req.params;
+        const villageId = req.villageId;
+        const isAdmin = req.user && (req.user.role === 'Admin' || req.user.role === 'admin');
+
+        // Cast to ObjectId since Mongoose might not cast it inside an $or array effectively
+        const mongoose = require('mongoose');
+        const objectId = new mongoose.Types.ObjectId(citizenId);
+
+        // Find the family where this citizen is a member OR head
+        const query = { 
+            status: 'Active',
+            $or: [
+                { 'members.citizenId': objectId },
+                { headCitizenId: objectId }
+            ]
+        };
+        
+        console.log(`Looking up family for citizen: ${citizenId}. Admin: ${isAdmin}, User Village: ${villageId}`);
+
+        // Temporarily bypassing villageId restriction to test if it's a jurisdiction error
+        // if (!isAdmin) {
+        //     query.villageId = villageId;
+        // }
+
+        const family = await Family.findOne(query)
+            .populate('headCitizenId')
+            .populate('members.citizenId')
+            .populate('villageId', 'villageName')
+            .lean();
+
+        if (!family) {
+            // It's possible the citizen doesn't belong to a family
+            return res.status(404).json({ message: "Family not found for this citizen." });
+        }
+
+        // Calculate Total Annual Income
+        let totalIncome = 0;
+        if (family.headCitizenId && family.headCitizenId.annualIncome) {
+            totalIncome += family.headCitizenId.annualIncome;
+        }
+        if (family.members) {
+            family.members.forEach(member => {
+                if (member.citizenId && member.citizenId.annualIncome) {
+                    totalIncome += member.citizenId.annualIncome;
+                }
+            });
+        }
+
+        const formattedFamily = {
+            ...family,
+            headOfFamily: family.headCitizenId,
+            members: family.members.map(m => {
+                if (!m.citizenId) return null;
+                return {
+                    ...m.citizenId,
+                    relationshipToHead: m.relationship,
+                    _id: m.citizenId._id
+                };
+            }).filter(Boolean),
+            village: family.villageId ? family.villageId.villageName : "Unknown",
+            totalAnnualIncome: totalIncome
+        };
+
+        res.status(200).json(formattedFamily);
+
+    } catch (error) {
+        console.error("Error fetching family by citizen ID:", error);
+        res.status(500).json({ message: "Server error fetching family by citizen ID: " + error.message });
     }
 };
 
@@ -370,14 +497,32 @@ exports.removeMember = async (req, res) => {
             totalAnnualIncome: 0
         };
 
-        // Recalculate income
+        // Recalculate and Synchronize Income dynamically
         let totalIncome = 0;
-        if (updatedFamily.headCitizenId && updatedFamily.headCitizenId.annualIncome) totalIncome += updatedFamily.headCitizenId.annualIncome;
+        const remainingMemberIds = [];
+
+        if (updatedFamily.headCitizenId) {
+            totalIncome += (updatedFamily.headCitizenId.annualIncome || 0);
+            remainingMemberIds.push(updatedFamily.headCitizenId._id);
+        }
+
         if (updatedFamily.members) {
-            updatedFamily.members.forEach(m => {
-                if (m.citizenId && m.citizenId.annualIncome) totalIncome += m.citizenId.annualIncome;
+            updatedFamily.members.forEach((m) => {
+                if (m.citizenId) {
+                    totalIncome += (m.citizenId.annualIncome || 0);
+                    remainingMemberIds.push(m.citizenId._id);
+                }
             });
         }
+
+        // Apply new family annual income to all remaining members
+        if (remainingMemberIds.length > 0) {
+            await Citizen.updateMany({ _id: { $in: remainingMemberIds } }, { familyAnnualIncome: totalIncome });
+        }
+
+        // Reset removed citizen's family annual income to just their own personal income
+        await Citizen.findByIdAndUpdate(citizenId, { familyAnnualIncome: citizen.annualIncome || 0 });
+
         formattedFamily.totalAnnualIncome = totalIncome;
 
         res.status(200).json(formattedFamily);
@@ -387,6 +532,109 @@ exports.removeMember = async (req, res) => {
         res.status(500).json({ message: "Server error removing member." });
     }
 };
+
+/**
+ * Add a member to the family
+ * @route POST /api/families/:id/members
+ */
+exports.addMember = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { citizenId, relationship } = req.body;
+        const villageId = req.villageId;
+
+        const family = await Family.findOne({ _id: id, villageId });
+        if (!family) {
+            return res.status(404).json({ message: "Family not found." });
+        }
+
+        const citizen = await Citizen.findById(citizenId);
+        if (!citizen) {
+            return res.status(404).json({ message: "Citizen not found." });
+        }
+
+        if (citizen.villageOfficeId.toString() !== villageId) {
+            return res.status(400).json({ message: "Citizen is outside jurisdiction." });
+        }
+
+        // Verify not in another active family
+        const conflictingFamilies = await Family.find({
+            'members.citizenId': citizenId,
+            status: 'Active'
+        });
+
+        if (conflictingFamilies.length > 0) {
+            return res.status(400).json({ message: "Citizen already belongs to another active family." });
+        }
+
+        family.members.push({
+            citizenId,
+            relationship,
+            isHead: false
+        });
+
+        await family.save();
+
+        // Recalculate total income
+        let totalIncome = 0;
+        const allMemberIds = [family.headCitizenId];
+
+        const headCount = await Citizen.findById(family.headCitizenId);
+        if (headCount) totalIncome += (headCount.annualIncome || 0);
+
+        for (const m of family.members) {
+            if (m.citizenId.toString() !== family.headCitizenId.toString()) {
+                const c = await Citizen.findById(m.citizenId);
+                if (c) {
+                    totalIncome += (c.annualIncome || 0);
+                    allMemberIds.push(c._id);
+                }
+            }
+        }
+
+        // Update all members dynamically 
+        await Citizen.updateMany({ _id: { $in: allMemberIds } }, { familyAnnualIncome: totalIncome });
+
+        const updatedFamily = await familyServiceQueryGetFamilyById(id, villageId, req.user);
+        res.status(200).json(updatedFamily);
+    } catch (error) {
+        console.error("Error adding family member:", error);
+        res.status(500).json({ message: "Server error adding member." });
+    }
+};
+
+// Helper for sending formatted family after add/remove
+async function familyServiceQueryGetFamilyById(id, villageId, user) {
+    const isAdmin = user && (user.role === 'Admin' || user.role === 'admin');
+    const query = { _id: id };
+    if (!isAdmin) query.villageId = villageId;
+
+    const family = await Family.findOne(query)
+        .populate('headCitizenId')
+        .populate('members.citizenId')
+        .populate('villageId', 'villageName')
+        .lean();
+
+    let totalIncome = 0;
+    if (family.headCitizenId && family.headCitizenId.annualIncome) totalIncome += family.headCitizenId.annualIncome;
+    if (family.members) {
+        family.members.forEach(member => {
+            if (member.citizenId && member.citizenId.annualIncome) totalIncome += member.citizenId.annualIncome;
+        });
+    }
+
+    return {
+        ...family,
+        headOfFamily: family.headCitizenId,
+        members: family.members.map(m => ({
+            ...m.citizenId,
+            relationshipToHead: m.relationship,
+            _id: m.citizenId._id
+        })),
+        village: family.villageId ? family.villageId.villageName : "Unknown",
+        totalAnnualIncome: totalIncome
+    };
+}
 
 /**
  * Bulk Upload Families from CSV

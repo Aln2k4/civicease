@@ -142,7 +142,7 @@ const validateApplicant = async (req, res) => {
         const existingService = await ServiceRecord.findOne({
             applicant: citizen._id,
             serviceName: serviceName,
-            status: { $in: ['Pending', 'Approved', 'Issued'] }
+            status: { $in: ['Applied', 'Verified', 'Under Review', 'Approved'] }
         });
 
         if (existingService) {
@@ -195,8 +195,13 @@ const createService = async (req, res) => {
             officialId: req.user._id,
             villageId: req.villageId, // Save the village context
             remarks,
-            status,
-            verificationDetails
+            status: status || 'Applied',
+            verificationDetails,
+            statusHistory: [{
+                status: status || 'Applied',
+                officerId: req.user._id,
+                note: 'Application submitted'
+            }]
         });
 
         res.status(201).json(service);
@@ -205,4 +210,148 @@ const createService = async (req, res) => {
     }
 };
 
-module.exports = { getServices, createService, validateApplicant };
+// @desc    Update verification status (Clerk)
+// @route   PUT /api/services/:id/verify
+// @access  Private
+const updateVerificationStatus = async (req, res) => {
+    try {
+        const service = await ServiceRecord.findById(req.params.id);
+        if (!service) return res.status(404).json({ message: "Service record not found." });
+
+        if (service.status !== 'Applied') {
+            return res.status(400).json({ message: `Can only verify applications that are 'Applied', but this is ${service.status}.` });
+        }
+
+        service.status = 'Verified';
+        service.verificationDate = new Date();
+        service.statusHistory.push({
+            status: 'Verified',
+            officerId: req.user._id,
+            note: req.body.note || 'Verification completed by Clerk'
+        });
+
+        await service.save();
+        res.json(service);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Approve certificate (Revenue Officer)
+// @route   PUT /api/services/:id/approve
+// @access  Private
+const approveCertificate = async (req, res) => {
+    try {
+        const service = await ServiceRecord.findById(req.params.id);
+        if (!service) return res.status(404).json({ message: "Service record not found." });
+
+        if (service.status !== 'Verified' && service.status !== 'Under Review') {
+            return res.status(400).json({ message: "Can only approve applications that are 'Verified' or 'Under Review'." });
+        }
+
+        service.status = 'Approved';
+        service.approvalDate = new Date();
+        service.approvingOfficer = req.user._id;
+        service.statusHistory.push({
+            status: 'Approved',
+            officerId: req.user._id,
+            note: req.body.note || 'Approved by Revenue Officer'
+        });
+
+        await service.save();
+        res.json(service);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Reject certificate (Revenue Officer)
+// @route   PUT /api/services/:id/reject
+// @access  Private
+const rejectCertificate = async (req, res) => {
+    try {
+        const { reason } = req.body;
+        if (!reason) return res.status(400).json({ message: "Rejection reason is required." });
+
+        const service = await ServiceRecord.findById(req.params.id);
+        if (!service) return res.status(404).json({ message: "Service record not found." });
+
+        if (service.status !== 'Applied' && service.status !== 'Verified' && service.status !== 'Under Review') {
+            return res.status(400).json({ message: "Invalid status for rejection." });
+        }
+
+        service.status = 'Rejected';
+        service.rejectionReason = reason;
+        service.statusHistory.push({
+            status: 'Rejected',
+            officerId: req.user._id,
+            note: reason
+        });
+
+        await service.save();
+        res.json(service);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Issue certificate (Revenue Officer)
+// @route   PUT /api/services/:id/issue
+// @access  Private
+const issueCertificate = async (req, res) => {
+    try {
+        const service = await ServiceRecord.findById(req.params.id);
+        if (!service) return res.status(404).json({ message: "Service record not found." });
+
+        if (service.status !== 'Approved') {
+            return res.status(400).json({ message: "Record must be 'Approved' before issuing." });
+        }
+
+        service.status = 'Issued';
+        service.issuedDate = new Date();
+        service.issueDate = new Date(); // keeping for backward compatibility if any
+        service.statusHistory.push({
+            status: 'Issued',
+            officerId: req.user._id,
+            note: req.body.note || 'Certificate digitally issued'
+        });
+
+        await service.save();
+        res.json(service);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Upload proof document for certificate
+// @route   POST /api/services/:id/upload-proof
+// @access  Private
+const uploadProof = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded." });
+        }
+
+        const service = await ServiceRecord.findById(req.params.id);
+        if (!service) return res.status(404).json({ message: "Service record not found." });
+
+        // Update document fields
+        service.proofUploaded = true;
+        service.documentType = req.body.documentType || 'General Proof';
+        // Convert local path to web-accessible URL assuming server routes /uploads to the directory
+        service.documentURL = `/uploads/certificates/${req.file.filename}`;
+
+        // Push the new document to the array just in case as well
+        if (!service.documents) service.documents = [];
+        service.documents.push(service.documentURL);
+
+        await service.save();
+        res.json({ message: "Proof uploaded successfully", service });
+    } catch (error) {
+        console.error("Upload proof error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getServices, createService, validateApplicant, updateVerificationStatus, approveCertificate, rejectCertificate, issueCertificate, uploadProof };
+

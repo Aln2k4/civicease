@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import familyService from "@/services/familyService";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowLeft } from "lucide-react";
 
 interface Citizen {
     _id: string;
@@ -32,6 +32,7 @@ interface Citizen {
     dob?: string;
     address?: string; // Present address
     permanentAddress?: any;
+    rationCardNumber?: string;
 }
 
 interface MemberSelection {
@@ -184,24 +185,56 @@ export default function AddFamily() {
     // -- Derived State --
 
     // Filter potential heads: Age >= 18
-    const eligibleHeads = availableCitizens.filter(c => c.age >= 18);
+    const eligibleHeads = availableCitizens
+        .filter(c => c.age >= 18)
+        .filter(c => {
+            if (rationCardNumber && c.rationCardNumber) {
+                return c.rationCardNumber.toLowerCase().includes(rationCardNumber.toLowerCase());
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            if (rationCardNumber) {
+                const aExact = a.rationCardNumber === rationCardNumber ? 1 : 0;
+                const bExact = b.rationCardNumber === rationCardNumber ? 1 : 0;
+                return bExact - aExact;
+            }
+            return 0;
+        });
 
     // Filter potential members: Not Head, Not already selected
-    const eligibleMembers = availableCitizens.filter(c =>
-        c._id !== headId &&
-        !members.find(m => m.citizenId === c._id)
-    );
+    const eligibleMembers = availableCitizens
+        .filter(c => c._id !== headId && !members.find(m => m.citizenId === c._id))
+        .filter(c => {
+            if (rationCardNumber && c.rationCardNumber) {
+                return c.rationCardNumber.toLowerCase().includes(rationCardNumber.toLowerCase());
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            if (rationCardNumber) {
+                const aExact = a.rationCardNumber === rationCardNumber ? 1 : 0;
+                const bExact = b.rationCardNumber === rationCardNumber ? 1 : 0;
+                return bExact - aExact;
+            }
+            return 0;
+        });
 
     if (!jurisdiction) return null;
 
     return (
         <main className="flex flex-col items-center w-full mt-8 pb-10">
             <Card className="w-full max-w-3xl">
-                <CardHeader className="bg-slate-50 border-b">
-                    <CardTitle className="text-2xl text-primary">Create New Family</CardTitle>
-                    <CardDescription>
-                        Create a family group for citizens in <strong>{jurisdiction.villageName}</strong>.
-                    </CardDescription>
+                <CardHeader className="bg-slate-50 border-b flex flex-row items-center gap-4 space-y-0">
+                    <Button variant="ghost" size="icon" type="button" onClick={() => navigate(-1)} className="rounded-full shrink-0 -ml-2">
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <CardTitle className="text-2xl text-primary">Create New Family</CardTitle>
+                        <CardDescription>
+                            Create a family group for citizens in <strong>{jurisdiction.villageName}</strong>.
+                        </CardDescription>
+                    </div>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="grid gap-6 pt-6">
@@ -233,7 +266,7 @@ export default function AddFamily() {
                                 <SelectContent>
                                     {eligibleHeads.map(citizen => (
                                         <SelectItem key={citizen._id} value={citizen._id}>
-                                            {citizen.name} (Age: {citizen.age}, ID: {citizen.uniqueId})
+                                            {citizen.name} (Age: {citizen.age}, ID: {citizen.uniqueId}) {citizen.rationCardNumber ? `[Ration: ${citizen.rationCardNumber}]` : ''}
                                         </SelectItem>
                                     ))}
                                     {eligibleHeads.length === 0 && !isLoadingCitizens && (
@@ -249,7 +282,7 @@ export default function AddFamily() {
                             <div className="flex justify-between items-center">
                                 <Label htmlFor="address">Family Address <span className="text-red-500">*</span></Label>
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="autoAddress" onCheckedChange={handleAddressAutoPopulate} disabled={!headId} />
+                                    <Checkbox id="autoAddress" onChange={(e: any) => handleAddressAutoPopulate(e.target.checked)} disabled={!headId} />
                                     <Label htmlFor="autoAddress" className="font-normal text-xs cursor-pointer">Use Head's Address</Label>
                                 </div>
                             </div>
@@ -270,7 +303,7 @@ export default function AddFamily() {
                                         <SelectContent>
                                             {eligibleMembers.map(citizen => (
                                                 <SelectItem key={citizen._id} value={citizen._id}>
-                                                    {citizen.name} (Age: {citizen.age})
+                                                    {citizen.name} (Age: {citizen.age}) {citizen.rationCardNumber ? `[Ration: ${citizen.rationCardNumber}]` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

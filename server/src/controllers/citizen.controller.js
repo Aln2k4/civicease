@@ -1,4 +1,5 @@
 const Citizen = require('../models/Citizen');
+const VillageOffice = require('../models/VillageOffice');
 const fs = require('fs');
 const csv = require('csv-parser');
 const { verifyBirthCertificate } = require('../services/ocrService');
@@ -27,7 +28,34 @@ const getCitizens = async (req, res) => {
             query = { villageOfficeId: req.villageId };
         }
 
-        const { search } = req.query;
+        const { search, district, taluk, villageId, ward } = req.query;
+
+        // Location Hierarchy Filtering
+        if (district || taluk || villageId) {
+            let villageQuery = {};
+            if (district) villageQuery.district = district;
+            if (taluk) villageQuery.taluk = taluk;
+            if (villageId) villageQuery._id = villageId;
+
+            const matchedVillages = await VillageOffice.find(villageQuery).select('_id');
+            const villageIds = matchedVillages.map(v => v._id);
+
+            if (query.villageOfficeId) {
+                // Intersect if officer is locked to a village
+                // Usually an officer is locked to 1 village, so this filter won't change much unless they search outside jurisdiction (which is denied).
+                // If they are allowed, we'd do an intersection. For now, just overwrite if Admin, or keep officer's.
+                if (isAdmin) {
+                    query.villageOfficeId = { $in: villageIds };
+                } // else officer's query.villageOfficeId remains what it is
+            } else {
+                query.villageOfficeId = { $in: villageIds };
+            }
+        }
+
+        if (ward) {
+            query.ward = ward;
+        }
+
         if (search) {
             const searchRegex = new RegExp(search, 'i');
             query.$or = [
